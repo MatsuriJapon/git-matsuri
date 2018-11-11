@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/google/go-github/v18/github"
 	"github.com/google/subcommands"
 	"strconv"
 )
@@ -22,20 +23,35 @@ func (*prCmd) Usage() string {
 func (p *prCmd) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&p.noclose, "noclose", false, "do not close issue on merge")
 }
-func (p *prCmd) Execute(_ context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
-	if len(f.Args()) == 1 {
-		issue, err := strconv.Atoi(f.Args()[0])
-		if err != nil {
-			f.Usage()
-			return subcommands.ExitUsageError
-		}
-		if p.noclose {
-			fmt.Printf("git matsuri pr -noclose %v\n", issue)
-		} else {
-			fmt.Printf("git matsuri pr %v\n", issue)
-		}
-		return subcommands.ExitSuccess
+func (p *prCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+	if len(f.Args()) != 1 {
+		f.Usage()
+		return subcommands.ExitUsageError
 	}
-	f.Usage()
-	return subcommands.ExitUsageError
+	issueNum, err := strconv.Atoi(f.Args()[0])
+	if err != nil || !IsValidIssue(ctx, issueNum) {
+		f.Usage()
+		return subcommands.ExitUsageError
+	}
+	issue, _, _ := client.Issues.Get(ctx, owner, repo, issueNum)
+	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
+	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
+	base := fmt.Sprintf("v%d", GetCurrentProjectYear())
+	body := fmt.Sprintf("Closes #%d\n", issue.GetNumber())
+	if p.noclose {
+		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
+	}
+	newPr := &github.NewPullRequest{
+		Title: github.String(title),
+		Head:  github.String(head),
+		Base:  github.String(base),
+		Body:  github.String(body),
+	}
+	pr, _, prErr := client.PullRequests.Create(ctx, owner, repo, newPr)
+	if prErr != nil {
+		fmt.Println(prErr)
+		return subcommands.ExitFailure
+	}
+	fmt.Printf("Pull Request created: %s\n", pr.GetHTMLURL())
+	return subcommands.ExitSuccess
 }

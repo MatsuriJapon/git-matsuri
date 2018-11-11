@@ -84,7 +84,7 @@ func MoveIssueCardForProject(ctx context.Context, num int, year int) error {
 	if err2 != nil {
 		return err2
 	}
-	doing, err3 := GetProjectColumnByName(ctx, project, "Doing")
+	doing, err3 := GetProjectColumnByName(ctx, project, "In progress")
 	if err3 != nil {
 		return err3
 	}
@@ -97,7 +97,10 @@ func MoveIssueCardForProject(ctx context.Context, num int, year int) error {
 		}
 		return nil
 	}
-	opt := &github.ProjectCardMoveOptions{ColumnID: doing.GetID()}
+	opt := &github.ProjectCardMoveOptions{
+		Position: "top",
+		ColumnID: doing.GetID(),
+	}
 	_, err4 := client.Projects.MoveProjectCard(ctx, card.GetID(), opt)
 	return err4
 }
