@@ -52,7 +52,7 @@ func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 		issue = issueNumber
 	}
 	// move project to Doing, or fail
-	moveErr := MoveIssueCardForProject(ctx, issue, currentYear)
+	moveErr := MoveProjectCardForProject(ctx, issue, currentYear)
 	if moveErr != nil {
 		fmt.Println(moveErr)
 		return subcommands.ExitFailure

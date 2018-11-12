@@ -23,9 +23,12 @@ func GetIssuesForProject(ctx context.Context, year int) ([]*github.Issue, error)
 	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
 	var issues []*github.Issue
 	for i := 0; i < len(cards); i++ {
-		if card := cards[i]; IsCardIssue(card) {
+		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
 			issue, _, _ := client.Issues.Get(ctx, owner, repo, num)
+			if issue.IsPullRequest() {
+				continue
+			}
 			issues = append(issues, issue)
 		}
 	}
@@ -60,11 +63,11 @@ func GetProjectColumnByName(ctx context.Context, project *github.Project, column
 	return nil, fmt.Errorf("Error: there is no %s column for %s", columnName, project.GetName())
 }
 
-// GetIssueCardInColumn gets the project card associated with the given issue number
-func GetIssueCardInColumn(ctx context.Context, column *github.ProjectColumn, issueNumber int) *github.ProjectCard {
+// GetProjectCardInColumn gets the project card associated with the given issue number
+func GetProjectCardInColumn(ctx context.Context, column *github.ProjectColumn, issueNumber int) *github.ProjectCard {
 	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
 	for i := 0; i < len(cards); i++ {
-		if card := cards[i]; IsCardIssue(card) {
+		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
 			if num == issueNumber {
 				return card
@@ -74,8 +77,8 @@ func GetIssueCardInColumn(ctx context.Context, column *github.ProjectColumn, iss
 	return nil
 }
 
-// MoveIssueCardForProject moves the Issue to the Doing column of the current Matsuri project year
-func MoveIssueCardForProject(ctx context.Context, num int, year int) error {
+// MoveProjectCardForProject moves the Issue to the Doing column of the current Matsuri project year
+func MoveProjectCardForProject(ctx context.Context, num int, year int) error {
 	project, err := GetProjectForYear(ctx, year)
 	if err != nil {
 		return err
@@ -88,10 +91,10 @@ func MoveIssueCardForProject(ctx context.Context, num int, year int) error {
 	if err3 != nil {
 		return err3
 	}
-	card := GetIssueCardInColumn(ctx, todo, num)
+	card := GetProjectCardInColumn(ctx, todo, num)
 	if card == nil {
 		// handle the case where the Issue has already been moved to Doing
-		card = GetIssueCardInColumn(ctx, doing, num)
+		card = GetProjectCardInColumn(ctx, doing, num)
 		if card == nil {
 			return fmt.Errorf("The specified Issue is not in %s's To Do or Doing columns", project.GetName())
 		}
@@ -105,8 +108,41 @@ func MoveIssueCardForProject(ctx context.Context, num int, year int) error {
 	return err4
 }
 
-// IsCardIssue checks whether the ProjectCard is an Issue Card
-func IsCardIssue(c *github.ProjectCard) bool {
+// CreatePRForIssueNumber creates a new PR for the given issue and returns the created card
+func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr *github.PullRequest, err error) {
+	issue, _, err := client.Issues.Get(ctx, owner, repo, issueNum)
+	if err != nil {
+		return
+	}
+	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
+	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
+	base := fmt.Sprintf("v%d", GetCurrentProjectYear())
+	body := fmt.Sprintf("Closes #%d\n", issue.GetNumber())
+	if noclose {
+		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
+	}
+	newPr := &github.NewPullRequest{
+		Title: github.String(title),
+		Head:  github.String(head),
+		Base:  github.String(base),
+		Body:  github.String(body),
+	}
+	pr, _, err = client.PullRequests.Create(ctx, owner, repo, newPr)
+	if err != nil {
+		return
+	}
+	project, err := GetProjectForYear(ctx, GetCurrentProjectYear())
+	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	if err != nil {
+		return
+	}
+	cardOpt := &github.ProjectCardOptions{ContentID: issue.GetID()}
+	_, _, err = client.Projects.CreateProjectCard(ctx, todo.GetID(), cardOpt)
+	return
+}
+
+// IsCardIssueOrPR checks whether the ProjectCard is an Issue Card
+func IsCardIssueOrPR(c *github.ProjectCard) bool {
 	base := fmt.Sprintf("https://api.github.com/repos/%s/%s/issues/\\d+", owner, repo)
 	re := regexp.MustCompile(base)
 	return re.MatchString(c.GetContentURL())
@@ -126,13 +162,17 @@ func IsValidIssue(ctx context.Context, num int) bool {
 	if err != nil {
 		return false
 	}
-	return issue.GetState() == "open"
+	return issue.GetState() == "open" && !issue.IsPullRequest()
 }
 
 // PrintIssues prints issues
 func PrintIssues(issues []*github.Issue) {
 	for i := 0; i < len(issues); i++ {
 		issue := issues[i]
+		// sanity check
+		if issue.IsPullRequest() {
+			continue
+		}
 		fmt.Printf("%d: %s\n", issue.GetNumber(), issue.GetTitle())
 	}
 }
