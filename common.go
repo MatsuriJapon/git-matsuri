@@ -114,9 +114,10 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	if err != nil {
 		return
 	}
+	projectYear := GetCurrentProjectYear()
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
-	base := fmt.Sprintf("v%d", GetCurrentProjectYear())
+	base := fmt.Sprintf("v%d", projectYear)
 	body := fmt.Sprintf("Closes #%d\n", issue.GetNumber())
 	if noclose {
 		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
@@ -131,12 +132,12 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	if err != nil {
 		return
 	}
-	project, err := GetProjectForYear(ctx, GetCurrentProjectYear())
+	project, err := GetProjectForYear(ctx, projectYear)
 	todo, err := GetProjectColumnByName(ctx, project, "To Do")
 	if err != nil {
 		return
 	}
-	cardOpt := &github.ProjectCardOptions{ContentID: issue.GetID()}
+	cardOpt := &github.ProjectCardOptions{ContentID: pr.GetID()}
 	_, _, err = client.Projects.CreateProjectCard(ctx, todo.GetID(), cardOpt)
 	return
 }
