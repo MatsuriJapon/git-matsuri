@@ -137,7 +137,10 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	if err != nil {
 		return
 	}
-	cardOpt := &github.ProjectCardOptions{ContentID: pr.GetID()}
+	cardOpt := &github.ProjectCardOptions{
+		ContentID:   pr.GetID(),
+		ContentType: "PullRequest",
+	}
 	_, _, err = client.Projects.CreateProjectCard(ctx, todo.GetID(), cardOpt)
 	return
 }
