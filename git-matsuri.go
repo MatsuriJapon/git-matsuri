@@ -15,7 +15,7 @@ import (
 
 var client *github.Client
 var owner = "MatsuriJapon"
-var repo = ""
+var repo string
 
 func getRepoInfo() (err error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")

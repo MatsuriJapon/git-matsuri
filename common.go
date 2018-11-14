@@ -9,19 +9,21 @@ import (
 	"time"
 )
 
-// GetIssuesForProject retrieves Issues for a Project, specified by its year
-func GetIssuesForProject(ctx context.Context, year int) ([]*github.Issue, error) {
+// GetIssuesForProject retrieves Issues for a Project, specified by its year. If this is not the main repo, return all Issues
+func GetIssuesForProject(ctx context.Context, year int) (issues []*github.Issue, err error) {
+	if !IsMainRepo() {
+		issues, _, err = client.Issues.ListByRepo(ctx, owner, repo, nil)
+		return
+	}
 	project, err := GetProjectForYear(ctx, year)
 	if err != nil {
-		return nil, err
+		return
 	}
-	column, err2 := GetProjectColumnByName(ctx, project, "To Do")
-	if err2 != nil {
-		return nil, err
+	column, err := GetProjectColumnByName(ctx, project, "To Do")
+	if err != nil {
+		return
 	}
-
 	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
-	var issues []*github.Issue
 	for i := 0; i < len(cards); i++ {
 		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
@@ -32,35 +34,38 @@ func GetIssuesForProject(ctx context.Context, year int) ([]*github.Issue, error)
 			issues = append(issues, issue)
 		}
 	}
-	return issues, nil
+	return
 }
 
 // GetProjectForYear gets the project associated with the current Matsuri year
-func GetProjectForYear(ctx context.Context, year int) (*github.Project, error) {
+func GetProjectForYear(ctx context.Context, year int) (project *github.Project, err error) {
+	if !IsMainRepo() {
+		err = fmt.Errorf("Error: this repository doesn't have a Project board")
+		return
+	}
 	projectName := fmt.Sprintf("Matsuri %d", year)
 	projects, _, _ := client.Repositories.ListProjects(ctx, owner, repo, nil)
-	var project *github.Project
 	for i := 0; i < len(projects); i++ {
 		if projects[i].GetName() == projectName {
 			project = projects[i]
-			break
+			return
 		}
 	}
-	if project == nil {
-		return nil, fmt.Errorf("Error: Project %s was not found", projectName)
-	}
-	return project, nil
+	err = fmt.Errorf("Error: Project %s was not found", projectName)
+	return
 }
 
 // GetProjectColumnByName gets the column by its name
-func GetProjectColumnByName(ctx context.Context, project *github.Project, columnName string) (*github.ProjectColumn, error) {
+func GetProjectColumnByName(ctx context.Context, project *github.Project, columnName string) (column *github.ProjectColumn, err error) {
 	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)
 	for i := 0; i < len(columns); i++ {
-		if column := columns[i]; column.GetName() == columnName {
-			return column, nil
+		if columns[i].GetName() == columnName {
+			column = columns[i]
+			return
 		}
 	}
-	return nil, fmt.Errorf("Error: there is no %s column for %s", columnName, project.GetName())
+	err = fmt.Errorf("Error: there is no %s column for %s", columnName, project.GetName())
+	return
 }
 
 // GetProjectCardInColumn gets the project card associated with the given issue number
@@ -78,18 +83,18 @@ func GetProjectCardInColumn(ctx context.Context, column *github.ProjectColumn, i
 }
 
 // MoveProjectCardForProject moves the Issue to the Doing column of the current Matsuri project year
-func MoveProjectCardForProject(ctx context.Context, num int, year int) error {
+func MoveProjectCardForProject(ctx context.Context, num int, year int) (err error) {
 	project, err := GetProjectForYear(ctx, year)
 	if err != nil {
+		return
+	}
+	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	if err != nil {
+		return
+	}
+	doing, err := GetProjectColumnByName(ctx, project, "In progress")
+	if err != nil {
 		return err
-	}
-	todo, err2 := GetProjectColumnByName(ctx, project, "To Do")
-	if err2 != nil {
-		return err2
-	}
-	doing, err3 := GetProjectColumnByName(ctx, project, "In progress")
-	if err3 != nil {
-		return err3
 	}
 	card := GetProjectCardInColumn(ctx, todo, num)
 	if card == nil {
@@ -98,14 +103,14 @@ func MoveProjectCardForProject(ctx context.Context, num int, year int) error {
 		if card == nil {
 			return fmt.Errorf("The specified Issue is not in %s's To Do or Doing columns", project.GetName())
 		}
-		return nil
+		return
 	}
 	opt := &github.ProjectCardMoveOptions{
 		Position: "top",
 		ColumnID: doing.GetID(),
 	}
-	_, err4 := client.Projects.MoveProjectCard(ctx, card.GetID(), opt)
-	return err4
+	_, err = client.Projects.MoveProjectCard(ctx, card.GetID(), opt)
+	return
 }
 
 // CreatePRForIssueNumber creates a new PR for the given issue and returns the created card
@@ -129,7 +134,7 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 		Body:  github.String(body),
 	}
 	pr, _, err = client.PullRequests.Create(ctx, owner, repo, newPr)
-	if err != nil {
+	if err != nil || !IsMainRepo() {
 		return
 	}
 	project, err := GetProjectForYear(ctx, projectYear)
@@ -153,11 +158,11 @@ func IsCardIssueOrPR(c *github.ProjectCard) bool {
 }
 
 // GetIssueNumberFromCard gets the Issue number from a Card
-func GetIssueNumberFromCard(c *github.ProjectCard) int {
+func GetIssueNumberFromCard(c *github.ProjectCard) (id int) {
 	r := regexp.MustCompile(`(?:issues/)(?P<id>\d+)`)
 	matches := r.FindStringSubmatch(c.GetContentURL())
-	id, _ := strconv.Atoi(matches[1])
-	return id
+	id, _ = strconv.Atoi(matches[1])
+	return
 }
 
 // IsValidIssue verifies that an open Issue with the given number exists
@@ -182,10 +187,15 @@ func PrintIssues(issues []*github.Issue) {
 }
 
 // GetCurrentProjectYear weird logic to get "current" Matsuri project year
-func GetCurrentProjectYear() int {
-	currentYear := time.Now().Year()
+func GetCurrentProjectYear() (currentYear int) {
+	currentYear = time.Now().Year()
 	if time.Now().Month() > 8 {
 		currentYear++
 	}
-	return currentYear
+	return
+}
+
+// IsMainRepo checks whether the current repo is the MatsuriJapon/matsuri-japon repo
+func IsMainRepo() bool {
+	return repo == "matsuri-japon"
 }
