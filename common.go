@@ -123,6 +123,9 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
 	base := fmt.Sprintf("v%d", projectYear)
+	if !IsMainRepo() {
+		base = "master"
+	}
 	body := fmt.Sprintf("Closes #%d\n", issue.GetNumber())
 	if noclose {
 		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
