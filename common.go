@@ -122,9 +122,9 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	projectYear := GetCurrentProjectYear()
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
-	base := fmt.Sprintf("v%d", projectYear)
-	if !IsMainRepo() {
-		base = "master"
+	base, err := GetDefaultBranch(ctx)
+	if err != nil {
+		return
 	}
 	body := fmt.Sprintf("Closes #%d\n", issue.GetNumber())
 	if noclose {
@@ -133,7 +133,7 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	newPr := &github.NewPullRequest{
 		Title: github.String(title),
 		Head:  github.String(head),
-		Base:  github.String(base),
+		Base:  base,
 		Body:  github.String(body),
 	}
 	pr, _, err = client.PullRequests.Create(ctx, owner, repo, newPr)
@@ -201,4 +201,14 @@ func GetCurrentProjectYear() (currentYear int) {
 // IsMainRepo checks whether the current repo is the MatsuriJapon/matsuri-japon repo
 func IsMainRepo() bool {
 	return repo == "matsuri-japon"
+}
+
+// GetDefaultBranch gets the name of the default branch for the repo
+func GetDefaultBranch(ctx context.Context) (branch *string, err error) {
+	repo, _, err := client.Repositories.Get(ctx, owner, repo)
+	if err != nil {
+		return
+	}
+	branch = repo.DefaultBranch
+	return
 }
