@@ -51,11 +51,13 @@ func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 		}
 		issue = issueNumber
 	}
-	// move project to Doing, or fail
-	moveErr := MoveProjectCardForProject(ctx, issue, currentYear)
-	if moveErr != nil {
-		fmt.Println(moveErr)
-		return subcommands.ExitFailure
+	if IsMainRepo() {
+		// move project to Doing, or fail
+		moveErr := MoveProjectCardForProject(ctx, issue, currentYear)
+		if moveErr != nil {
+			fmt.Println(moveErr)
+			return subcommands.ExitFailure
+		}
 	}
 	// checkout branch
 	branchName := fmt.Sprintf("ISSUE-%d", issue)
