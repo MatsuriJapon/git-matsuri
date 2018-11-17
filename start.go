@@ -17,7 +17,7 @@ func prepareCheckout(ctx context.Context) (err error) {
 	fmt.Println("Checking status of current branch...")
 	cmd := exec.Command("git", "status")
 	out, err := cmd.Output()
-	fmt.Println(out)
+	fmt.Println(string(out))
 	if err != nil {
 		return
 	}
@@ -33,7 +33,7 @@ func prepareCheckout(ctx context.Context) (err error) {
 	defaultBranch, _ := GetDefaultBranch(ctx)
 	cmd = exec.Command("git", "checkout", *defaultBranch)
 	out, err = cmd.Output()
-	fmt.Println(out)
+	fmt.Println(string(out))
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func prepareCheckout(ctx context.Context) (err error) {
 	fmt.Println("Pulling changes...")
 	cmd = exec.Command("git", "pull")
 	out, err = cmd.Output()
-	fmt.Println(out)
+	fmt.Println(string(out))
 	return
 }
 
