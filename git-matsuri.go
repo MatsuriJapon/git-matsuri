@@ -14,6 +14,7 @@ import (
 )
 
 var client *github.Client
+var tokenName = "MATSURI_TOKEN"
 var owner = "MatsuriJapon"
 var repo string
 
@@ -39,13 +40,18 @@ func main() {
 	flag.Parse()
 	ctx := context.Background()
 
-	err := getRepoInfo()
-	if err != nil {
+	if err := getRepoInfo(); err != nil {
 		fmt.Println(err)
+		return
 	}
 
-	// https://github.com/settings/tokens/new
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: os.Getenv("MATSURI_TOKEN")})
+	token := os.Getenv(tokenName)
+	if token == "" {
+		fmt.Printf("GitHub token not found.\nPlease create one at https://github.com/settings/tokens/new with 'repo' permissions and save it to your system environment variables under the name MATSURI_TOKEN\n")
+		return
+	}
+
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
 	client = github.NewClient(tc)
 
