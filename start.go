@@ -6,10 +6,45 @@ import (
 	"fmt"
 	"github.com/google/subcommands"
 	"os/exec"
+	"regexp"
 	"strconv"
 )
 
 type startCmd struct{}
+
+func prepareCheckout(ctx context.Context) (err error) {
+	// status
+	fmt.Println("Checking status of current branch...")
+	cmd := exec.Command("git", "status")
+	out, err := cmd.Output()
+	fmt.Println(out)
+	if err != nil {
+		return
+	}
+	r := regexp.MustCompile("nothing to commit")
+	match := r.Match(out)
+	if !match {
+		err = fmt.Errorf("Error: there might be unsaved changes in the current repository.\nResolve them before creating a new branch")
+		return
+	}
+
+	// checkout default
+	fmt.Println("Checking out default branch...")
+	defaultBranch, _ := GetDefaultBranch(ctx)
+	cmd = exec.Command("git", "checkout", *defaultBranch)
+	out, err = cmd.Output()
+	fmt.Println(out)
+	if err != nil {
+		return
+	}
+
+	// pull
+	fmt.Println("Pulling changes...")
+	cmd = exec.Command("git", "pull")
+	out, err = cmd.Output()
+	fmt.Println(out)
+	return
+}
 
 func (*startCmd) Name() string     { return "start" }
 func (*startCmd) Synopsis() string { return "start working on an open issue" }
@@ -51,15 +86,21 @@ func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 		}
 		issue = issueNumber
 	}
+	// pre-checkout checks
+	if err := prepareCheckout(ctx); err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+
 	if IsMainRepo() {
 		// move project to Doing, or fail
-		moveErr := MoveProjectCardForProject(ctx, issue, currentYear)
-		if moveErr != nil {
-			fmt.Println(moveErr)
+		if err := MoveProjectCardForProject(ctx, issue, currentYear); err != nil {
+			fmt.Println(err)
 			return subcommands.ExitFailure
 		}
 	}
 	// checkout branch
+	fmt.Println("Checking out topic branch...")
 	branchName := fmt.Sprintf("ISSUE-%d", issue)
 	cmd := exec.Command("git", "checkout", "-b", branchName)
 	out, err := cmd.Output()
