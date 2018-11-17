@@ -29,6 +29,7 @@ func (p *saveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}
 		f.Usage()
 		return subcommands.ExitUsageError
 	}
+	fmt.Println("Pushing your changes to GitHub...")
 	branches := fmt.Sprintf("ISSUE-%d:ISSUE-%d", issue, issue)
 	cmd := exec.Command("git", "push", "-u", "origin", branches)
 	out, err := cmd.Output()
@@ -36,6 +37,6 @@ func (p *saveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}
 		fmt.Println("There was an issue pushing the branch")
 		return subcommands.ExitFailure
 	}
-	fmt.Print(string(out))
+	fmt.Println(string(out))
 	return subcommands.ExitSuccess
 }

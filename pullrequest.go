@@ -32,6 +32,7 @@ func (p *prCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) 
 		f.Usage()
 		return subcommands.ExitUsageError
 	}
+	fmt.Printf("Creating a PR for ISSUE-%d...\n", issueNum)
 	pr, cardErr := CreatePRForIssueNumber(ctx, issueNum, p.noclose)
 	// we might succeed at creating the PR but fail at placing it in the To Do column
 	if pr != nil {

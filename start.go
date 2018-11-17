@@ -108,6 +108,7 @@ func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 		fmt.Println("There was an issue creating the git branch")
 		return subcommands.ExitFailure
 	}
-	fmt.Print(string(out))
+	fmt.Println(string(out))
+	fmt.Printf("You are now working in branch %s\n", branchName)
 	return subcommands.ExitSuccess
 }
