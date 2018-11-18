@@ -55,6 +55,23 @@ func GetProjectForYear(ctx context.Context, year int) (project *github.Project, 
 	return
 }
 
+// PrintProjectKanban prints the project kanban
+func PrintProjectKanban(ctx context.Context, project *github.Project) {
+	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)
+	for i := 0; i < len(columns); i++ {
+		column := columns[i]
+		fmt.Println(column.GetName())
+		cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
+		for j := 0; j < len(cards); j++ {
+			card := cards[j]
+			num := GetIssueNumberFromCard(card)
+			issue, _, _ := client.Issues.Get(ctx, owner, repo, num)
+			fmt.Printf("%d: %s\n", issue.GetNumber(), issue.GetTitle())
+		}
+		fmt.Println()
+	}
+}
+
 // GetProjectColumnByName gets the column by its name
 func GetProjectColumnByName(ctx context.Context, project *github.Project, columnName string) (column *github.ProjectColumn, err error) {
 	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)

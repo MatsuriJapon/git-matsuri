@@ -32,7 +32,8 @@ func getRepoInfo() (err error) {
 
 func main() {
 	subcommands.Register(subcommands.HelpCommand(), "")
-	subcommands.Register(&issueCmd{}, "")
+	subcommands.Register(&kanbanCmd{}, "")
+	subcommands.Register(&todoCmd{}, "")
 	subcommands.Register(&startCmd{}, "")
 	subcommands.Register(&saveCmd{}, "")
 	subcommands.Register(&prCmd{}, "")

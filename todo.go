@@ -8,17 +8,17 @@ import (
 	"strconv"
 )
 
-type issueCmd struct{}
+type todoCmd struct{}
 
-func (*issueCmd) Name() string     { return "issues" }
-func (*issueCmd) Synopsis() string { return "list all opened issues" }
-func (*issueCmd) Usage() string {
-	return `issues [<YEAR>]:
+func (*todoCmd) Name() string     { return "todo" }
+func (*todoCmd) Synopsis() string { return "list all opened issues" }
+func (*todoCmd) Usage() string {
+	return `todo [<YEAR>]:
 	List all opened issues. If YEAR is provided, only show those for the current year.
 	`
 }
-func (p *issueCmd) SetFlags(_ *flag.FlagSet) {}
-func (p *issueCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+func (p *todoCmd) SetFlags(_ *flag.FlagSet) {}
+func (p *todoCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) == 1 {
 		year, err := strconv.Atoi(f.Args()[0])
 		if err != nil {
