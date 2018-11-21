@@ -106,6 +106,7 @@ func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 	out, err := cmd.Output()
 	if err != nil {
 		fmt.Println("There was an issue creating the git branch")
+		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
 	fmt.Println(string(out))
