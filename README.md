@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg)](https://circleci.com/gh/MatsuriJapon/git-matsuri)
+
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
 ## Show the current kanban
