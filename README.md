@@ -2,6 +2,20 @@
 
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
+
+## Installation
+Download and extract the latest release. The binary is found in the respective directory for the platform of choice (windows_amd64 for Windows, darwin_amd64 for Mac OS, etc.).
+### Windows
+- Place `git-matsuri.exe` into the `C:\Program Files\Git\mingw64\libexec\git-core` folder
+
+### Linux/Mac
+- Move the `git-matsuri` binary file to a location of your choice, or keep it in the downloaded directory
+- Add the file location to PATH: 
+```sh
+export PATH="$(pwd):$PATH"
+```
+- To make this permanent, add the above to your `~/.bashrc` file
+
 ## Show the current kanban
 Use sparingly. It is usually meant for admins to prepare their report. Displays the full kanban, if available, in text format as would otherwise be available in the GitHub Projects page.
 ```sh
