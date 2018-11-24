@@ -28,10 +28,7 @@ workflows:
   version: 2
   main:
     jobs:
-      - build:
-        filters:
-          tags:
-            only: /^v\d+\.\d+\.\d+$/
+      - build
       - publish-git-release:
           requires:
             - build
