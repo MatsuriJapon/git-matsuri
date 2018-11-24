@@ -17,6 +17,7 @@ jobs:
     - image: golang:latest
     working_directory: /work
     steps:
+    - checkout
     - run: go get github.com/tcnksm/ghr
     - run: env GOOS=windows GOARCH=amd64 go build -o ./artifacts/windows_amd64/go-matsuri.exe ./...
     - run: env GOOS=linux GOARCH=amd64 go build -o ./artifacts/linux_amd64/git-matsuri ./...
@@ -27,7 +28,10 @@ workflows:
   version: 2
   main:
     jobs:
-      - build
+      - build:
+        filters:
+          tags:
+            only: /^v\d+\.\d+\.\d+$/
       - publish-git-release:
         requires:
           - build
