@@ -136,7 +136,7 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 	if err != nil {
 		return
 	}
-	projectYear := GetCurrentProjectYear()
+	projectYear, _ := GetCurrentProjectYear(ctx)
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
 	base, err := GetDefaultBranch(ctx)
@@ -206,11 +206,21 @@ func PrintIssues(issues []*github.Issue) {
 	}
 }
 
-// GetCurrentProjectYear weird logic to get "current" Matsuri project year
-func GetCurrentProjectYear() (currentYear int) {
-	currentYear = time.Now().Year()
-	if time.Now().Month() > 8 {
-		currentYear++
+// GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name. If this fails, default to the current year, determined by the current month
+func GetCurrentProjectYear(ctx context.Context) (currentYear int, err error) {
+	defaultBranch, err := GetDefaultBranch(ctx)
+	if err != nil {
+		return
+	}
+	r := regexp.MustCompile(`^v(?P<year>\d+)`)
+	matches := r.FindStringSubmatch(*defaultBranch)
+	if len(matches) == 2 {
+		currentYear, _ = strconv.Atoi(matches[1])
+	} else {
+		currentYear = time.Now().Year()
+		if time.Now().Month() > 3 {
+			currentYear++
+		}
 	}
 	return
 }

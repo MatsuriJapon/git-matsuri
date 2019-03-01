@@ -14,8 +14,8 @@ import (
 )
 
 var client *github.Client
-var tokenName = "MATSURI_TOKEN"
-var owner = "MatsuriJapon"
+const tokenName = "MATSURI_TOKEN"
+const owner = "MatsuriJapon"
 var repo string
 
 func getRepoInfo() (err error) {

@@ -57,7 +57,7 @@ func (p *startCmd) SetFlags(_ *flag.FlagSet) {}
 func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	var issue int
 	// weird logic to get "current" Matsuri project year
-	currentYear := GetCurrentProjectYear()
+	currentYear, _ := GetCurrentProjectYear(ctx)
 	if len(f.Args()) == 1 {
 		issueNumber, err := strconv.Atoi(f.Args()[0])
 		if err != nil {
