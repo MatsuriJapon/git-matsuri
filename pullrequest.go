@@ -34,11 +34,12 @@ func (p *prCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) 
 		return subcommands.ExitUsageError
 	}
 	cmd := exec.Command("git", "matsuri", "save", f.Args()[0])
-	err = cmd.Run()
+	out, err := cmd.Output()
 	if err != nil {
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
+	fmt.Println(string(out))
 
 	fmt.Printf("Creating a PR for ISSUE-%d...\n", issueNum)
 	pr, err := CreatePRForIssueNumber(ctx, issueNum, p.noclose)
