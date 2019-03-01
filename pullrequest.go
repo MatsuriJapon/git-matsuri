@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/google/subcommands"
+	"os/exec"
 	"strconv"
 )
 
@@ -32,14 +33,21 @@ func (p *prCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) 
 		f.Usage()
 		return subcommands.ExitUsageError
 	}
+	cmd := exec.Command("git", "matsuri", "save", f.Args()[0])
+	err = cmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+
 	fmt.Printf("Creating a PR for ISSUE-%d...\n", issueNum)
-	pr, cardErr := CreatePRForIssueNumber(ctx, issueNum, p.noclose)
+	pr, err := CreatePRForIssueNumber(ctx, issueNum, p.noclose)
 	// we might succeed at creating the PR but fail at placing it in the To Do column
 	if pr != nil {
 		fmt.Printf("Pull Request created: %s\n", pr.GetHTMLURL())
 	}
-	if cardErr != nil {
-		fmt.Println(cardErr)
+	if err != nil {
+		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
 	return subcommands.ExitSuccess
