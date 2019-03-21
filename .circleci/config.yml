@@ -22,7 +22,7 @@ jobs:
     - run: env GOOS=windows GOARCH=amd64 go build -o ./artifacts/windows_amd64/git-matsuri.exe .
     - run: env GOOS=linux GOARCH=amd64 go build -o ./artifacts/linux_amd64/git-matsuri .
     - run: env GOOS=darwin GOARCH=amd64 go build -o ./artifacts/darwin_amd64/git-matsuri .
-    - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/
+    - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete 1.0.1 ./artifacts/
 
 workflows:
   version: 2
