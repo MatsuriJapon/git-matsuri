@@ -1,4 +1,4 @@
-package main
+package matsuri
 
 import (
 	"context"
@@ -10,7 +10,8 @@ import (
 	"strconv"
 )
 
-type startCmd struct{}
+// StartCmd is a git-matsuri subcommand
+type StartCmd struct{}
 
 func prepareCheckout(ctx context.Context) (err error) {
 	// status
@@ -46,15 +47,24 @@ func prepareCheckout(ctx context.Context) (err error) {
 	return
 }
 
-func (*startCmd) Name() string     { return "start" }
-func (*startCmd) Synopsis() string { return "start working on an open issue" }
-func (*startCmd) Usage() string {
+// Name returns the subcommand name
+func (*StartCmd) Name() string { return "start" }
+
+// Synopsis returns the subcommand synopsis
+func (*StartCmd) Synopsis() string { return "start working on an open issue" }
+
+// Usage returns the subcommand usage
+func (*StartCmd) Usage() string {
 	return `start [<ISSUE>]:
 	Create a named branch for the chosen issue and change its status to 'Doing'
 	`
 }
-func (p *startCmd) SetFlags(_ *flag.FlagSet) {}
-func (p *startCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+
+// SetFlags sets the subcommand flags
+func (p *StartCmd) SetFlags(_ *flag.FlagSet) {}
+
+// Execute runs the subcommand
+func (p *StartCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	var issue int
 	// weird logic to get "current" Matsuri project year
 	currentYear, _ := GetCurrentProjectYear(ctx)

@@ -1,4 +1,4 @@
-package main
+package matsuri
 
 import (
 	"context"
@@ -9,17 +9,27 @@ import (
 	"strconv"
 )
 
-type saveCmd struct{}
+// SaveCmd is a git-matsuri subcommand
+type SaveCmd struct{}
 
-func (*saveCmd) Name() string     { return "save" }
-func (*saveCmd) Synopsis() string { return "save current work on GitHub" }
-func (*saveCmd) Usage() string {
+// Name returns the subcommand name
+func (*SaveCmd) Name() string { return "save" }
+
+// Synopsis returns the subcommand synopsis
+func (*SaveCmd) Synopsis() string { return "save current work on GitHub" }
+
+// Usage returns the subcommand usage
+func (*SaveCmd) Usage() string {
 	return `save <ISSUE>:
 	Save current work on GitHub in the correct branch
 	`
 }
-func (p *saveCmd) SetFlags(_ *flag.FlagSet) {}
-func (p *saveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+
+// SetFlags sets the subcommand flags
+func (p *SaveCmd) SetFlags(_ *flag.FlagSet) {}
+
+// Execute runs the subcommand
+func (p *SaveCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
 		return subcommands.ExitUsageError

@@ -1,4 +1,4 @@
-package main
+package matsuri
 
 import (
 	"context"
@@ -8,22 +8,31 @@ import (
 	"strconv"
 )
 
-type fixCmd struct {
+// FixCmd is a git-matsuri subcommand
+type FixCmd struct {
 	noclose bool
 }
 
-func (*fixCmd) Name() string     { return "fix" }
-func (*fixCmd) Synopsis() string { return "open a new PR to fix a bug in the original one" }
-func (*fixCmd) Usage() string {
+// Name returns the subcommand name
+func (*FixCmd) Name() string { return "fix" }
+
+// Synopsis returns the subcommand synopsis
+func (*FixCmd) Synopsis() string { return "open a new PR to fix a bug in the original one" }
+
+// Usage returns the subcommand usage
+func (*FixCmd) Usage() string {
 	return `fix [-noclose] <ISSUE>:
 	Open a new PR to fix the original one. Add '-noclose' to override the closing of the issue.
 	`
 }
 
-func (p *fixCmd) SetFlags(f *flag.FlagSet) {
+// SetFlags sets the subcommand flags
+func (p *FixCmd) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&p.noclose, "noclose", false, "do not close issue on merge")
 }
-func (p *fixCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+
+// Execute runs the subcommand
+func (p *FixCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
 		return subcommands.ExitUsageError

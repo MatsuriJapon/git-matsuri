@@ -1,4 +1,4 @@
-package main
+package matsuri
 
 import (
 	"context"
@@ -9,21 +9,31 @@ import (
 	"strconv"
 )
 
-type prCmd struct {
+// PrCmd is a git-matsuri subcommand
+type PrCmd struct {
 	noclose bool
 }
 
-func (*prCmd) Name() string     { return "pr" }
-func (*prCmd) Synopsis() string { return "open a pull request for ISSUE" }
-func (*prCmd) Usage() string {
+// Name returns the subcommand name
+func (*PrCmd) Name() string { return "pr" }
+
+// Synopsis returns the subcommand synopsis
+func (*PrCmd) Synopsis() string { return "open a pull request for ISSUE" }
+
+// Usage returns the subcommand usage
+func (*PrCmd) Usage() string {
 	return `pr [-noclose] <ISSUE>:
 	Open a pull request for ISSUE, adding a mention to $ISSUE in the message to link the PR to the issue. Add '-noclose' to override the closing of the issue.
 	`
 }
-func (p *prCmd) SetFlags(f *flag.FlagSet) {
+
+// SetFlags sets the subcommand flags
+func (p *PrCmd) SetFlags(f *flag.FlagSet) {
 	f.BoolVar(&p.noclose, "noclose", false, "do not close issue on merge")
 }
-func (p *prCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
+
+// Execute runs the subcommand
+func (p *PrCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{}) subcommands.ExitStatus {
 	if len(f.Args()) != 1 {
 		f.Usage()
 		return subcommands.ExitUsageError

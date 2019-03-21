@@ -8,7 +8,7 @@ jobs:
     - checkout
     - run: go get golang.org/x/lint/golint
     - run: test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-    - run: golint -set_exit_status .
+    - run: golint -set_exit_status ./...
     - run: go build ./...
     - run: go test -race -v ./...
     - run: go vet ./...
@@ -34,6 +34,5 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /.*/
-            tags:
-              only: /^v\d+\.\d+\.\d+$/
+              only:
+                - master
