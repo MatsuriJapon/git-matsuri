@@ -130,13 +130,31 @@ func MoveProjectCardForProject(ctx context.Context, num int, year int) (err erro
 	return
 }
 
+func createPR(ctx context.Context, newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {
+	projectYear, _ := GetCurrentProjectYear(ctx)
+	pr, _, err = client.PullRequests.Create(ctx, owner, repo, newPr)
+	if err != nil || !IsMainRepo() {
+		return
+	}
+	project, err := GetProjectForYear(ctx, projectYear)
+	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	if err != nil {
+		return
+	}
+	cardOpt := &github.ProjectCardOptions{
+		ContentID:   pr.GetID(),
+		ContentType: "PullRequest",
+	}
+	_, _, err = client.Projects.CreateProjectCard(ctx, todo.GetID(), cardOpt)
+	return
+}
+
 // CreatePRForIssueNumber creates a new PR for the given issue and returns the created card
 func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr *github.PullRequest, err error) {
 	issue, _, err := client.Issues.Get(ctx, owner, repo, issueNum)
 	if err != nil {
 		return
 	}
-	projectYear, _ := GetCurrentProjectYear(ctx)
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
 	base, err := GetDefaultBranch(ctx)
@@ -153,21 +171,32 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 		Base:  base,
 		Body:  github.String(body),
 	}
-	pr, _, err = client.PullRequests.Create(ctx, owner, repo, newPr)
-	if err != nil || !IsMainRepo() {
-		return
-	}
-	project, err := GetProjectForYear(ctx, projectYear)
-	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	return createPR(ctx, newPr)
+}
+
+// CreateFixPRForIssueNumber creates a fix PR for the provided issue
+func CreateFixPRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr *github.PullRequest, err error) {
+	issue, _, err := client.Issues.Get(ctx, owner, repo, issueNum)
 	if err != nil {
 		return
 	}
-	cardOpt := &github.ProjectCardOptions{
-		ContentID:   pr.GetID(),
-		ContentType: "PullRequest",
+	title := fmt.Sprintf("ISSUE-%d-fix: %s", issue.GetNumber(), issue.GetTitle())
+	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
+	base, err := GetDefaultBranch(ctx)
+	if err != nil {
+		return
 	}
-	_, _, err = client.Projects.CreateProjectCard(ctx, todo.GetID(), cardOpt)
-	return
+	body := fmt.Sprintf("Fixes PR for #%d\n", issue.GetNumber())
+	if noclose {
+		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
+	}
+	newPr := &github.NewPullRequest{
+		Title: github.String(title),
+		Head:  github.String(head),
+		Base:  base,
+		Body:  github.String(body),
+	}
+	return createPR(ctx, newPr)
 }
 
 // IsCardIssueOrPR checks whether the ProjectCard is an Issue Card
