@@ -7,7 +7,7 @@ Git subcommands to use with repositories under the MatsuriJapon Organization.
 [Git](https://git-scm.com/downloads) must be installed.
 
 ## Installation
-Download and extract the latest release. The binary is found in the respective directory for the platform of choice (windows_amd64 for Windows, darwin_amd64 for Mac OS, etc.).
+Download and extract the latest [release](https://github.com/MatsuriJapon/git-matsuri/releases) or compile from source (requires Go 1.12+). The binary is found in the respective directory for the platform of choice (`windows_amd64` for Windows, `darwin_amd64` for Mac OS, etc.).
 
 ### Windows
 - Place `git-matsuri.exe` into the `C:\Program Files\Git\mingw64\libexec\git-core` folder
@@ -18,7 +18,7 @@ Download and extract the latest release. The binary is found in the respective d
 ```sh
 export PATH="$(pwd):$PATH"
 ```
-- To make this permanent, add the above to your `~/.bashrc` file
+- To make this permanent, add the above to your `~/.bashrc` or `~/.bash_profile` file and reload it using `source ~/.bashrc` or `source ~/.bash_profile`
 
 ## Show the current kanban
 Use sparingly. It is usually meant for admins to prepare their report. Displays the full kanban, if available, in text format as would otherwise be available in the GitHub Projects page.
