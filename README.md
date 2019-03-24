@@ -3,8 +3,12 @@
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
 
+## Prerequisite
+[Git](https://git-scm.com/downloads) must be installed.
+
 ## Installation
 Download and extract the latest release. The binary is found in the respective directory for the platform of choice (windows_amd64 for Windows, darwin_amd64 for Mac OS, etc.).
+
 ### Windows
 - Place `git-matsuri.exe` into the `C:\Program Files\Git\mingw64\libexec\git-core` folder
 
