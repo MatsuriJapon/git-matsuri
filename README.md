@@ -20,6 +20,20 @@ export PATH="$(pwd):$PATH"
 ```
 - To make this permanent, add the above to your `~/.bashrc` or `~/.bash_profile` file and reload it using `source ~/.bashrc` or `source ~/.bash_profile`
 
+### GitHub token
+Visit https://github.com/settings/tokens/new and create a new token with `repo` permissions and save it to your system environment variables under the name `MATSURI_TOKEN`
+
+#### Windows 10
+`Win + S` and search for `environment variables`. Add one named `MATSURI_TOKEN` with the token you created as a value.
+
+#### Linux/Mac
+```sh
+export MATSURI_TOKEN=<enter token here>
+```
+
+To make this permanent, add the above to your `~/.bashrc` or `~/.bash_profile` file and reload it using `source ~/.bashrc` or `source ~/.bash_profile`
+
+
 ## Show the current kanban
 Use sparingly. It is usually meant for admins to prepare their report. Displays the full kanban, if available, in text format as would otherwise be available in the GitHub Projects page.
 ```sh
