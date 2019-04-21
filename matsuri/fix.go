@@ -38,7 +38,7 @@ func (p *FixCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		return subcommands.ExitUsageError
 	}
 	issueNum, err := strconv.Atoi(f.Args()[0])
-	if err != nil || !IsValidIssue(ctx, issueNum) {
+	if err != nil || !IsExistingIssue(ctx, issueNum) {
 		f.Usage()
 		return subcommands.ExitUsageError
 	}

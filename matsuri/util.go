@@ -86,6 +86,23 @@ func IsValidIssue(ctx context.Context, num int) bool {
 	return issue.GetState() == "open" && !issue.IsPullRequest()
 }
 
+// IsExistingIssue verifies that the Issue exists and is not a pull request
+func IsExistingIssue(ctx context.Context, num int) bool {
+	repoName, err := GetRepoName()
+	if err != nil {
+		return false
+	}
+	client, err := GetClient(ctx)
+	if err != nil {
+		return false
+	}
+	issue, _, err := client.Issues.Get(ctx, owner, repoName, num)
+	if err != nil {
+		return false
+	}
+	return !issue.IsPullRequest()
+}
+
 // GetDefaultBranch gets the name of the default branch for the repo
 func GetDefaultBranch(ctx context.Context) (branch *string, err error) {
 	repoName, err := GetRepoName()
