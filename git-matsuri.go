@@ -16,6 +16,7 @@ var client *github.Client
 
 func main() {
 	subcommands.Register(subcommands.HelpCommand(), "")
+	subcommands.Register(&matsuri.SetupCmd{}, "")
 	subcommands.Register(&matsuri.KanbanCmd{}, "")
 	subcommands.Register(&matsuri.TodoCmd{}, "")
 	subcommands.Register(&matsuri.StartCmd{}, "")
@@ -27,8 +28,7 @@ func main() {
 	ctx := context.Background()
 
 	if _, err := matsuri.GetRepoName(); err != nil {
-		fmt.Println(err)
-		return
+		fmt.Println("WARN: You are currently not in a git repository, some subcommands may not run.")
 	}
 
 	token := os.Getenv(matsuri.TokenName)

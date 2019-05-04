@@ -6,12 +6,7 @@ jobs:
     working_directory: /work
     steps:
     - checkout
-    - run: go get golang.org/x/lint/golint
-    - run: test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-    - run: golint -set_exit_status ./...
-    - run: go build ./...
-    - run: go test -race -v ./...
-    - run: go vet ./...
+    - run: make lint
   publish-git-release:
     docker:
     - image: golang:latest
@@ -19,9 +14,7 @@ jobs:
     steps:
     - checkout
     - run: go get github.com/tcnksm/ghr
-    - run: env GOOS=windows GOARCH=amd64 go build -o ./artifacts/windows_amd64/git-matsuri.exe .
-    - run: env GOOS=linux GOARCH=amd64 go build -o ./artifacts/linux_amd64/git-matsuri .
-    - run: env GOOS=darwin GOARCH=amd64 go build -o ./artifacts/darwin_amd64/git-matsuri .
+    - run: make build
     - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/
 
 workflows:

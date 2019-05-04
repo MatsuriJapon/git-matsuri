@@ -33,6 +33,24 @@ func GetRepoName() (repo string, err error) {
 	return
 }
 
+// GetRepoURL verifies that the given repository name matches a MatsuriJapon repository and returns its url
+func GetRepoURL(ctx context.Context, name string, http bool) (url string, err error) {
+	client, err := GetClient(ctx)
+	if err != nil {
+		return
+	}
+	repo, _, err := client.Repositories.Get(ctx, owner, name)
+	if err != nil || repo == nil{
+		return
+	}
+	if http {
+		url = repo.GetCloneURL()
+	} else {
+		url = repo.GetSSHURL()
+	}
+	return
+}
+
 // GetClient retrieves a client from a context with value
 func GetClient(ctx context.Context) (client *github.Client, err error) {
 	v := ctx.Value(ContextKey("client"))
