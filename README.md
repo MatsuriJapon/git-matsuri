@@ -33,6 +33,15 @@ export MATSURI_TOKEN=<enter token here>
 
 To make this permanent, add the above to your `~/.bashrc` or `~/.bash_profile` file and reload it using `source ~/.bashrc` or `source ~/.bash_profile`
 
+## Clone a MatsuriJapon repository
+To start working on a repository, you must first clone it. By default, we use git over SSH, although it is also possible to use it via HTTP (not recommended).
+```sh
+git matsuri setup ${REPO_NAME}
+# Alternatively, you can clone using HTTP (not recommended)
+git matsuri setup -http ${REPO_NAME}
+# Move into the newly cloned directory
+cd ${REPO_NAME}
+```
 
 ## Show the current kanban
 Use sparingly. It is usually meant for admins to prepare their report. Displays the full kanban, if available, in text format as would otherwise be available in the GitHub Projects page.
