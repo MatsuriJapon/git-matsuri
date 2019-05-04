@@ -27,6 +27,7 @@ func main() {
 	ctx := context.Background()
 
 	if _, err := matsuri.GetRepoName(); err != nil {
+		fmt.Println("A git repository could not be found. You might not be inside a directory containing a git repository.")
 		fmt.Println(err)
 		return
 	}
