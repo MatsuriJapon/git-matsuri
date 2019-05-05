@@ -27,7 +27,7 @@ func GetRepoName() (repo string, err error) {
 	if err != nil {
 		return
 	}
-	r := regexp.MustCompile(`.+github\.com:MatsuriJapon\/(?P<repo>.+)\.git`)
+	r := regexp.MustCompile(`.+github\.com[:\/]MatsuriJapon\/(?P<repo>.+)\.git`)
 	match := r.FindStringSubmatch(string(url))
 	repo = match[1]
 	return
