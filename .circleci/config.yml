@@ -1,12 +1,5 @@
 version: 2
 jobs:
-  lint:
-    docker:
-    - image: golang:latest
-    working_directory: /work
-    steps:
-    - checkout
-    - run: make lint
   build:
     docker:
     - image: golang:latest
@@ -28,11 +21,8 @@ workflows:
   version: 2
   main:
     jobs:
-      - lint
       - build:
           filters:
-            branches:
-              only: master
             tags:
               only: /.*/
       - release:
