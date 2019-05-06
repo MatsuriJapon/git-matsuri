@@ -2,24 +2,24 @@ version: 2
 jobs:
   build:
     docker:
-    - image: golang:latest
+      - image: golang:latest
     working_directory: /work
     steps:
-    - checkout
-    - run: make build
-    - persist_to_workspace:
-      root: /work
-      paths:
-        - artifacts/*
+      - checkout
+      - run: make build
+      - persist_to_workspace:
+        root: /work
+        paths:
+          - artifacts/*
   release:
     docker:
-    - image: golang:latest
+      
     working_directory: /work
     steps:
-    - attach_workspace:
-      at: /work/artifacts
-    - run: go get github.com/tcnksm/ghr
-    - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/
+      - attach_workspace:
+        at: /work/artifacts
+      - run: go get github.com/tcnksm/ghr
+      - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts/
 
 workflows:
   version: 2
