@@ -51,5 +51,10 @@ func (p *FixCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		fmt.Println(err)
 		return subcommands.ExitFailure
 	}
+	// reopen Issue if it has been closed
+	err = ReopenIssue(ctx, issueNum)
+	if err != nil {
+		fmt.Printf("Created PR but could not reopen Issue #%d\n", issueNum)
+	}
 	return subcommands.ExitSuccess
 }

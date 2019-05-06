@@ -358,8 +358,8 @@ func CreateFixPRForIssueNumber(ctx context.Context, issueNum int, noclose bool) 
 		return
 	}
 	body := fmt.Sprintf("Fixes PR for #%d\n", issue.GetNumber())
-	if noclose {
-		body = fmt.Sprintf("Related to #%d\n", issue.GetNumber())
+	if !noclose {
+		body += fmt.Sprintf("Closes #%d\n", issue.GetNumber())
 	}
 	newPr := &github.NewPullRequest{
 		Title: github.String(title),
@@ -402,6 +402,31 @@ func MoveProjectCardForProject(ctx context.Context, num int, year int) (err erro
 		return
 	}
 	_, err = client.Projects.MoveProjectCard(ctx, card.GetID(), opt)
+	return
+}
+
+// ReopenIssue reopens a closed Issue
+func ReopenIssue(ctx context.Context, issueNum int) (err error) {
+	repoName, err := GetRepoName()
+	if err != nil {
+		return
+	}
+	client, err := GetClient(ctx)
+	if err != nil {
+		return
+	}
+	issue, _, err := client.Issues.Get(ctx, owner, repoName, issueNum)
+	if err != nil {
+		return
+	}
+	if issue.GetState() == "open" || issue.IsPullRequest() {
+		err = nil
+		return
+	}
+	reopenRequest := &github.IssueRequest{
+		State: github.String("open"),
+	}
+	_, _, err = client.Issues.Edit(ctx, owner, repoName, issueNum, reopenRequest)
 	return
 }
 
