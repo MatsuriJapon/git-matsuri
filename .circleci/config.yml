@@ -8,9 +8,9 @@ jobs:
       - checkout
       - run: make build
       - persist_to_workspace:
-        root: /work
-        paths:
-          - artifacts/*
+          root: /work
+          paths:
+            - artifacts/*
   release:
     docker:
       - image: golang:latest
