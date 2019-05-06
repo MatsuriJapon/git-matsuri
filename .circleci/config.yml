@@ -1,25 +1,23 @@
-version: 2.1
-
-executors:
-  go-executor:
-    docker:
-      - image: golang:latest
-    working_directory: /work
-
-
+version: 2
 jobs:
   lint:
-    executor: go-executor
+    docker:
+    - image: golang:latest
+    working_directory: /work
     steps:
     - checkout
     - run: make lint
   build:
-    executor: go-executor
+    docker:
+    - image: golang:latest
+    working_directory: /work
     steps:
     - checkout
     - run: make build
   release:
-    executor: go-executor
+    docker:
+    - image: golang:latest
+    working_directory: /work
     steps:
     - attach_workspace:
       at: /work/artifacts
