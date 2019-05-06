@@ -19,7 +19,8 @@ jobs:
       - attach_workspace:
           at: /work
       - run: go get github.com/tcnksm/ghr
-      - run: zip artifacts.zip ./artifacts/*
+      - run: apt update && apt install -y zip
+      - run: zip -r ./artifacts/artifacts.zip ./artifacts/*
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./artifacts
 
 workflows:
