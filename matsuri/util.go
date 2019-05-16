@@ -40,7 +40,7 @@ func GetRepoURL(ctx context.Context, name string, http bool) (url string, err er
 		return
 	}
 	repo, _, err := client.Repositories.Get(ctx, owner, name)
-	if err != nil || repo == nil{
+	if err != nil || repo == nil {
 		return
 	}
 	if http {
@@ -292,6 +292,9 @@ func createPR(ctx context.Context, newPr *github.NewPullRequest) (pr *github.Pul
 		return
 	}
 	project, err := GetProjectForYear(ctx, projectYear)
+	if err != nil {
+		return
+	}
 	todo, err := GetProjectColumnByName(ctx, project, "To Do")
 	if err != nil {
 		return
