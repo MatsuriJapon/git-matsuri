@@ -3,14 +3,12 @@ clean:
 	rm -rf ${BUILD_DIR}
 
 deps:
-	go get golang.org/x/lint/golint
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin v1.16.0
 
 lint: deps
-	test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-	golint -set_exit_status ./...
+	golangci-lint run --new-from-rev=HEAD~
 	go build ./...
 	go test -race -v ./...
-	go vet ./...
 
 build: clean lint
 	mkdir -p ${BUILD_DIR}
