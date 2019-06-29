@@ -1,4 +1,6 @@
 BUILD_DIR=./artifacts
+VERSION := $(shell cat VERSION)
+LDFLAGS=-ldflags "-X github.com/MatsuriJapon/git-matsuri/matsuri.CurrentVersion=${VERSION}"
 clean:
 	rm -rf ${BUILD_DIR}
 
@@ -12,8 +14,8 @@ lint: deps
 
 build: clean lint
 	mkdir -p ${BUILD_DIR}
-	env GOOS=windows GOARCH=amd64 go build -o ${BUILD_DIR}/windows_amd64/git-matsuri.exe .
-	env GOOS=linux GOARCH=amd64 go build -o ${BUILD_DIR}/linux_amd64/git-matsuri .
-	env GOOS=darwin GOARCH=amd64 go build -o ${BUILD_DIR}/darwin_amd64/git-matsuri .
+	env GOOS=windows GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/windows_amd64/git-matsuri.exe .
+	env GOOS=linux GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/linux_amd64/git-matsuri .
+	env GOOS=darwin GOARCH=amd64 go build ${LDFLAGS} -o ${BUILD_DIR}/darwin_amd64/git-matsuri .
 
 .PHONY: deps lint build clean

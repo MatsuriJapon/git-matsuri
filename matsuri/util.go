@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v18/github"
+	"github.com/hashicorp/go-version"
 )
 
 // TokenName is the environment variable name for the GitHub token
@@ -19,6 +20,26 @@ const owner = "MatsuriJapon"
 
 // ContextKey is a key to retrieve the value from a context
 type ContextKey string
+
+// GetLatestVersion gets the release tag of the latest release version of git-matsuri
+func GetLatestVersion(ctx context.Context) (v *version.Version, err error) {
+	client, err := GetClient(ctx)
+	if err != nil {
+		return
+	}
+	release, _, err := client.Repositories.GetLatestRelease(ctx, owner, "git-matsuri")
+	if err != nil {
+		return
+	}
+	r := regexp.MustCompile(`^v(?P<version>\d+\.\d+\.\d+)$`)
+	matches := r.FindStringSubmatch(*release.TagName)
+	if len(matches) != 2 {
+		err = errors.New("Could not retrieve version number")
+		return
+	}
+	v, err = version.NewVersion(matches[1])
+	return
+}
 
 // GetRepoName gets the repository name from the current directory
 func GetRepoName() (repo string, err error) {
