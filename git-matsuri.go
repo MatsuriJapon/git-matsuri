@@ -23,6 +23,7 @@ func main() {
 	subcommands.Register(&matsuri.SaveCmd{}, "")
 	subcommands.Register(&matsuri.PrCmd{}, "")
 	subcommands.Register(&matsuri.FixCmd{}, "")
+	subcommands.Register(&matsuri.VersionCmd{}, "")
 
 	flag.Parse()
 	ctx := context.Background()
