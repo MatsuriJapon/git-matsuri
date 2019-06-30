@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
+// CurrentVersion is a build-time string representing the current version
 var CurrentVersion string
 
 // VersionCmd is a git-matsuri subcommand
