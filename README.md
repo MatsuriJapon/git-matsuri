@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg&circle-token=d8dafe865a3b6e3dee7dd0f56e51e393f4ffc0be)](https://circleci.com/gh/MatsuriJapon/git-matsuri)
+[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg&circle-token=d8dafe865a3b6e3dee7dd0f56e51e393f4ffc0be)](https://circleci.com/gh/MatsuriJapon/git-matsuri) [![GoDoc](https://godoc.org/github.com/MatsuriJapon/git-matsuri?status.svg)](https://godoc.org/github.com/MatsuriJapon/git-matsuri)
 
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
