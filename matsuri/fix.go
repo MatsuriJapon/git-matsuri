@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/google/subcommands"
+	"os/exec"
 	"strconv"
 )
 
@@ -42,6 +43,14 @@ func (p *FixCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{})
 		f.Usage()
 		return subcommands.ExitUsageError
 	}
+	cmd := exec.Command("git", "matsuri", "save", f.Args()[0])
+	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+	fmt.Println(string(out))
+
 	fmt.Printf("Creating a fix PR for ISSUE-%d...\n", issueNum)
 	pr, err := CreateFixPRForIssueNumber(ctx, issueNum, p.noclose)
 	if pr != nil {
