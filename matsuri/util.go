@@ -41,6 +41,28 @@ func GetLatestVersion(ctx context.Context) (v *version.Version, err error) {
 	return
 }
 
+// GetMatsuriEmail gets the festivaljapon.com email of the current user, if available
+func GetMatsuriEmail(ctx context.Context) (email string, err error) {
+	client, err := GetClient(ctx)
+	if err != nil {
+		return
+	}
+	userEmails, _, err := client.Users.ListEmails(ctx, nil)
+	if err != nil {
+		return
+	}
+	r := regexp.MustCompile(`.+@festivaljapon.com`)
+	for _, userEmail := range userEmails {
+		matches := r.FindStringSubmatch(userEmail.GetEmail())
+		if len(matches) != 1 {
+			continue
+		}
+		email = matches[0]
+		return
+	}
+	return
+}
+
 // GetRepoName gets the repository name from the current directory
 func GetRepoName() (repo string, err error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")

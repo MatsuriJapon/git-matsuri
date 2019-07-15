@@ -34,7 +34,7 @@ func main() {
 
 	token := os.Getenv(matsuri.TokenName)
 	if token == "" {
-		fmt.Printf("GitHub token not found.\nPlease create one at https://github.com/settings/tokens/new with 'repo' permissions and save it to your system environment variables under the name MATSURI_TOKEN\n")
+		fmt.Printf("GitHub token not found.\nPlease create one at https://github.com/settings/tokens/new with 'repo' and 'user:email' permissions and save it to your system environment variables under the name MATSURI_TOKEN\n")
 		return
 	}
 
