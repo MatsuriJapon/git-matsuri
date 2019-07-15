@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/google/subcommands"
+	"os"
 	"os/exec"
 )
 
@@ -61,5 +62,27 @@ func (p *SetupCmd) Execute(ctx context.Context, f *flag.FlagSet, _ ...interface{
 		return subcommands.ExitFailure
 	}
 	fmt.Println(string(out))
+
+	matsuriEmail, err := GetMatsuriEmail(ctx)
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+	if matsuriEmail == "" {
+		fmt.Println("A Matsuri email address was not found in this account. Please add one in your GitHub profile")
+		return subcommands.ExitFailure
+	}
+	err = os.Chdir(repoName)
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+	configCmd := exec.Command("git", "config", "--local", "user.email", matsuriEmail)
+	err = configCmd.Run()
+	if err != nil {
+		fmt.Println(err)
+		return subcommands.ExitFailure
+	}
+
 	return subcommands.ExitSuccess
 }
