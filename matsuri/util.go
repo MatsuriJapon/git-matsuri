@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/go-github/v29/github"
+	"github.com/hashicorp/go-version"
+	"golang.org/x/oauth2"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"time"
-
-	"github.com/google/go-github/v18/github"
-	"github.com/hashicorp/go-version"
 )
 
 // TokenName is the environment variable name for the GitHub token
@@ -18,15 +19,12 @@ const TokenName = "MATSURI_TOKEN"
 
 const owner = "MatsuriJapon"
 
-// ContextKey is a key to retrieve the value from a context
-type ContextKey string
+var ctx = context.Background()
 
 // GetLatestVersion gets the release tag of the latest release version of git-matsuri
-func GetLatestVersion(ctx context.Context) (v *version.Version, err error) {
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+func GetLatestVersion() (v *version.Version, err error) {
+	client := GetClient()
+
 	release, _, err := client.Repositories.GetLatestRelease(ctx, owner, "git-matsuri")
 	if err != nil {
 		return
@@ -42,16 +40,13 @@ func GetLatestVersion(ctx context.Context) (v *version.Version, err error) {
 }
 
 // GetMatsuriEmail gets the festivaljapon.com email of the current user, if available
-func GetMatsuriEmail(ctx context.Context) (email string, err error) {
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+func GetMatsuriEmail() (email string, err error) {
+	client := GetClient()
 	userEmails, _, err := client.Users.ListEmails(ctx, nil)
 	if err != nil {
 		return
 	}
-	r := regexp.MustCompile(`.+@festivaljapon.com`)
+	r := regexp.MustCompile(`^[\w._+-]+@festivaljapon.com$`)
 	for _, userEmail := range userEmails {
 		matches := r.FindStringSubmatch(userEmail.GetEmail())
 		if len(matches) != 1 {
@@ -77,11 +72,9 @@ func GetRepoName() (repo string, err error) {
 }
 
 // GetRepoURL verifies that the given repository name matches a MatsuriJapon repository and returns its url
-func GetRepoURL(ctx context.Context, name string, http bool) (url string, err error) {
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+func GetRepoURL(name string, http bool) (url string, err error) {
+	client := GetClient()
+
 	repo, _, err := client.Repositories.Get(ctx, owner, name)
 	if err != nil || repo == nil {
 		return
@@ -95,28 +88,13 @@ func GetRepoURL(ctx context.Context, name string, http bool) (url string, err er
 }
 
 // GetClient retrieves a client from a context with value
-func GetClient(ctx context.Context) (client *github.Client, err error) {
-	v := ctx.Value(ContextKey("client"))
-	t, ok := v.(*github.Client)
-	if !ok {
-		err = errors.New("Could not get a GitHub client")
-		return
-	}
-	client = t
+func GetClient() (client *github.Client) {
+	ctx := context.Background()
+	token := os.Getenv(TokenName)
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+	tc := oauth2.NewClient(ctx, ts)
+	client = github.NewClient(tc)
 	return
-}
-
-// IsMainRepo checks whether the current repo is the MatsuriJapon/matsuri-japon repo
-func IsMainRepo() bool {
-	if repoName, err := GetRepoName(); err != nil || repoName != "matsuri-japon" {
-		return false
-	}
-	return true
-}
-
-// IsMainRepoName checks whether the current repo is the MatsuriJapon/matsuri-japon repo
-func IsMainRepoName(repoName string) bool {
-	return repoName == "matsuri-japon"
 }
 
 // IsCardIssueOrPR checks whether the ProjectCard is an Issue Card
@@ -131,15 +109,12 @@ func IsCardIssueOrPR(c *github.ProjectCard) bool {
 }
 
 // IsValidIssue verifies that an open Issue with the given number exists
-func IsValidIssue(ctx context.Context, num int) bool {
+func IsValidIssue(num int) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return false
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return false
-	}
+	client := GetClient()
 	issue, _, err := client.Issues.Get(ctx, owner, repoName, num)
 	if err != nil {
 		return false
@@ -148,15 +123,12 @@ func IsValidIssue(ctx context.Context, num int) bool {
 }
 
 // IsExistingIssue verifies that the Issue exists and is not a pull request
-func IsExistingIssue(ctx context.Context, num int) bool {
+func IsExistingIssue(num int) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return false
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return false
-	}
+	client := GetClient()
 	issue, _, err := client.Issues.Get(ctx, owner, repoName, num)
 	if err != nil {
 		return false
@@ -165,15 +137,12 @@ func IsExistingIssue(ctx context.Context, num int) bool {
 }
 
 // GetDefaultBranch gets the name of the default branch for the repo
-func GetDefaultBranch(ctx context.Context) (branch *string, err error) {
+func GetDefaultBranch() (branch *string, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
 	repo, _, err := client.Repositories.Get(ctx, owner, repoName)
 	if err != nil {
 		return
@@ -183,8 +152,8 @@ func GetDefaultBranch(ctx context.Context) (branch *string, err error) {
 }
 
 // GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name. If this fails, default to the current year, determined by the current month
-func GetCurrentProjectYear(ctx context.Context) (currentYear int, err error) {
-	defaultBranch, err := GetDefaultBranch(ctx)
+func GetCurrentProjectYear() (currentYear int, err error) {
+	defaultBranch, err := GetDefaultBranch()
 	if err != nil {
 		return
 	}
@@ -194,32 +163,26 @@ func GetCurrentProjectYear(ctx context.Context) (currentYear int, err error) {
 		currentYear, _ = strconv.Atoi(matches[1])
 	} else {
 		currentYear = time.Now().Year()
-		if time.Now().Month() > 3 {
+		if time.Now().Month() > 2 {
 			currentYear++
 		}
 	}
 	return
 }
 
-// GetIssuesForProject retrieves Issues for a Project, specified by its year. If this is not the main repo, return all Issues
-func GetIssuesForProject(ctx context.Context, year int) (issues []*github.Issue, err error) {
+// GetIssuesForProject retrieves Issues for a Project, specified by its year
+func GetIssuesForProject(year int) (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
+	client := GetClient()
+
+	project, err := GetProjectForYear(year)
 	if err != nil {
 		return
 	}
-	if !IsMainRepoName(repoName) {
-		issues, _, err = client.Issues.ListByRepo(ctx, owner, repoName, nil)
-		return
-	}
-	project, err := GetProjectForYear(ctx, year)
-	if err != nil {
-		return
-	}
-	column, err := GetProjectColumnByName(ctx, project, "To Do")
+	column, err := GetProjectColumnByName(project, "To do")
 	if err != nil {
 		return
 	}
@@ -245,22 +208,23 @@ func GetIssueNumberFromCard(c *github.ProjectCard) (id int) {
 	return
 }
 
+// GetRepoNameFromURL gets the Repository name from a URL
+func GetRepoNameFromURL(url string) (repoName string) {
+	r := regexp.MustCompile(`(?:MatsuriJapon/)(?P<repoName>[^/]+)`)
+	matches := r.FindStringSubmatch(url)
+	repoName = matches[1]
+	return
+}
+
 // GetProjectForYear gets the project associated with the current Matsuri year
-func GetProjectForYear(ctx context.Context, year int) (project *github.Project, err error) {
-	repoName, err := GetRepoName()
-	if err != nil {
-		return
-	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
-	if !IsMainRepoName(repoName) {
-		err = fmt.Errorf("Error: this repository doesn't have a Project board")
-		return
-	}
+func GetProjectForYear(year int) (project *github.Project, err error) {
+	client := GetClient()
+
 	projectName := fmt.Sprintf("Matsuri %d", year)
-	projects, _, _ := client.Repositories.ListProjects(ctx, owner, repoName, nil)
+	projects, _, err := client.Organizations.ListProjects(ctx, owner, nil)
+	if err != nil {
+		return
+	}
 	for i := 0; i < len(projects); i++ {
 		if projects[i].GetName() == projectName {
 			project = projects[i]
@@ -272,11 +236,9 @@ func GetProjectForYear(ctx context.Context, year int) (project *github.Project, 
 }
 
 // GetProjectColumnByName gets the column by its name
-func GetProjectColumnByName(ctx context.Context, project *github.Project, columnName string) (column *github.ProjectColumn, err error) {
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+func GetProjectColumnByName(project *github.Project, columnName string) (column *github.ProjectColumn, err error) {
+	client := GetClient()
+
 	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)
 	for i := 0; i < len(columns); i++ {
 		if columns[i].GetName() == columnName {
@@ -289,15 +251,20 @@ func GetProjectColumnByName(ctx context.Context, project *github.Project, column
 }
 
 // GetProjectCardInColumn gets the project card associated with the given issue number
-func GetProjectCardInColumn(ctx context.Context, column *github.ProjectColumn, issueNumber int) *github.ProjectCard {
-	client, err := GetClient(ctx)
+func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *github.ProjectCard {
+	repoName, err := GetRepoName()
 	if err != nil {
 		return nil
 	}
+	client := GetClient()
 	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
 	for i := 0; i < len(cards); i++ {
 		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
+			_, _, err := client.Issues.Get(ctx, owner, repoName, num)
+			if err != nil {
+				continue
+			}
 			if num == issueNumber {
 				return card
 			}
@@ -307,38 +274,33 @@ func GetProjectCardInColumn(ctx context.Context, column *github.ProjectColumn, i
 }
 
 // GetRepoIssues gets the issues for the current repository
-func GetRepoIssues(ctx context.Context) (issues []*github.Issue, err error) {
+func GetRepoIssues() (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
 	issues, _, err = client.Issues.ListByRepo(ctx, owner, repoName, nil)
 	return
 }
 
-func createPR(ctx context.Context, newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {
+func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
-	projectYear, _ := GetCurrentProjectYear(ctx)
+	client := GetClient()
+
+	projectYear, _ := GetCurrentProjectYear()
 	pr, _, err = client.PullRequests.Create(ctx, owner, repoName, newPr)
-	if err != nil || !IsMainRepoName(repoName) {
-		return
-	}
-	project, err := GetProjectForYear(ctx, projectYear)
 	if err != nil {
 		return
 	}
-	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	project, err := GetProjectForYear(projectYear)
+	if err != nil {
+		return
+	}
+	todo, err := GetProjectColumnByName(project, "To do")
 	if err != nil {
 		return
 	}
@@ -351,22 +313,19 @@ func createPR(ctx context.Context, newPr *github.NewPullRequest) (pr *github.Pul
 }
 
 // CreatePRForIssueNumber creates a new PR for the given issue and returns the created card
-func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr *github.PullRequest, err error) {
+func CreatePRForIssueNumber(issueNum int, noclose bool) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
 	issue, _, err := client.Issues.Get(ctx, owner, repoName, issueNum)
 	if err != nil {
 		return
 	}
 	title := fmt.Sprintf("ISSUE-%d: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
-	base, err := GetDefaultBranch(ctx)
+	base, err := GetDefaultBranch()
 	if err != nil {
 		return
 	}
@@ -380,26 +339,23 @@ func CreatePRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr
 		Base:  base,
 		Body:  github.String(body),
 	}
-	return createPR(ctx, newPr)
+	return createPR(newPr)
 }
 
 // CreateFixPRForIssueNumber creates a fix PR for the provided issue
-func CreateFixPRForIssueNumber(ctx context.Context, issueNum int, noclose bool) (pr *github.PullRequest, err error) {
+func CreateFixPRForIssueNumber(issueNum int, noclose bool) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
 	issue, _, err := client.Issues.Get(ctx, owner, repoName, issueNum)
 	if err != nil {
 		return
 	}
 	title := fmt.Sprintf("ISSUE-%d-fix: %s", issue.GetNumber(), issue.GetTitle())
 	head := fmt.Sprintf("ISSUE-%d", issue.GetNumber())
-	base, err := GetDefaultBranch(ctx)
+	base, err := GetDefaultBranch()
 	if err != nil {
 		return
 	}
@@ -413,29 +369,29 @@ func CreateFixPRForIssueNumber(ctx context.Context, issueNum int, noclose bool) 
 		Base:  base,
 		Body:  github.String(body),
 	}
-	return createPR(ctx, newPr)
+	return createPR(newPr)
 }
 
 // MoveProjectCardForProject moves the Issue to the Doing column of the current Matsuri project year
-func MoveProjectCardForProject(ctx context.Context, num int, year int) (err error) {
-	project, err := GetProjectForYear(ctx, year)
+func MoveProjectCardForProject(num int, year int) (err error) {
+	project, err := GetProjectForYear(year)
 	if err != nil {
 		return
 	}
-	todo, err := GetProjectColumnByName(ctx, project, "To Do")
+	todo, err := GetProjectColumnByName(project, "To do")
 	if err != nil {
 		return
 	}
-	doing, err := GetProjectColumnByName(ctx, project, "In progress")
+	doing, err := GetProjectColumnByName(project, "In progress")
 	if err != nil {
-		return err
+		return
 	}
-	card := GetProjectCardInColumn(ctx, todo, num)
+	card := GetProjectCardInColumn(todo, num)
 	if card == nil {
 		// handle the case where the Issue has already been moved to Doing
-		card = GetProjectCardInColumn(ctx, doing, num)
+		card = GetProjectCardInColumn(doing, num)
 		if card == nil {
-			return fmt.Errorf("The specified Issue is not in %s's To Do or Doing columns", project.GetName())
+			return fmt.Errorf("The specified Issue is not in %s's To do or Doing columns", project.GetName())
 		}
 		return
 	}
@@ -443,24 +399,19 @@ func MoveProjectCardForProject(ctx context.Context, num int, year int) (err erro
 		Position: "top",
 		ColumnID: doing.GetID(),
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
 	_, err = client.Projects.MoveProjectCard(ctx, card.GetID(), opt)
 	return
 }
 
 // ReopenIssue reopens a closed Issue
-func ReopenIssue(ctx context.Context, issueNum int) (err error) {
+func ReopenIssue(issueNum int) (err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+	client := GetClient()
+
 	issue, _, err := client.Issues.Get(ctx, owner, repoName, issueNum)
 	if err != nil {
 		return
@@ -477,15 +428,8 @@ func ReopenIssue(ctx context.Context, issueNum int) (err error) {
 }
 
 // PrintProjectKanban prints the project kanban
-func PrintProjectKanban(ctx context.Context, project *github.Project) {
-	repoName, err := GetRepoName()
-	if err != nil {
-		return
-	}
-	client, err := GetClient(ctx)
-	if err != nil {
-		return
-	}
+func PrintProjectKanban(project *github.Project) {
+	client := GetClient()
 	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)
 	for i := 0; i < len(columns); i++ {
 		column := columns[i]
@@ -494,8 +438,9 @@ func PrintProjectKanban(ctx context.Context, project *github.Project) {
 		for j := 0; j < len(cards); j++ {
 			card := cards[j]
 			num := GetIssueNumberFromCard(card)
+			repoName := GetRepoNameFromURL(card.GetContentURL())
 			issue, _, _ := client.Issues.Get(ctx, owner, repoName, num)
-			fmt.Printf("%d: %s\n", issue.GetNumber(), issue.GetTitle())
+			fmt.Printf("%d [%s]: %s\n", issue.GetNumber(), repoName, issue.GetTitle())
 		}
 		fmt.Println()
 	}
@@ -509,6 +454,7 @@ func PrintIssues(issues []*github.Issue) {
 		if issue.IsPullRequest() {
 			continue
 		}
-		fmt.Printf("%d: %s\n", issue.GetNumber(), issue.GetTitle())
+		repoName := GetRepoNameFromURL(issue.GetRepositoryURL())
+		fmt.Printf("%d [%s]: %s\n", issue.GetNumber(), repoName, issue.GetTitle())
 	}
 }
