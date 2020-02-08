@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 // TokenName is the environment variable name for the GitHub token
@@ -151,21 +150,17 @@ func GetDefaultBranch() (branch *string, err error) {
 	return
 }
 
-// GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name. If this fails, default to the current year, determined by the current month
+// GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name of the matsuri-japon repository
 func GetCurrentProjectYear() (currentYear int, err error) {
-	defaultBranch, err := GetDefaultBranch()
+	client := GetClient()
+	repo, _, err := client.Repositories.Get(ctx, owner, "matsuri-japon")
 	if err != nil {
 		return
 	}
 	r := regexp.MustCompile(`^v(?P<year>\d+)`)
-	matches := r.FindStringSubmatch(*defaultBranch)
+	matches := r.FindStringSubmatch(*repo.DefaultBranch)
 	if len(matches) == 2 {
 		currentYear, _ = strconv.Atoi(matches[1])
-	} else {
-		currentYear = time.Now().Year()
-		if time.Now().Month() > 2 {
-			currentYear++
-		}
 	}
 	return
 }
