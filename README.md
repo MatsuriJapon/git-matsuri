@@ -101,7 +101,7 @@ git push
 When your work is ready for review, send a Pull Request specifying the issue number. If the Pull Request is not meant to close the issue once it is merged, add the `-noclose` flag
 ```sh
 git matsuri pr ${ISSUE}
-git matsuri pr -noclose ${ISSUE}
+git matsuri pr --noclose ${ISSUE}
 ```
 
 ### Plain git equivalent
