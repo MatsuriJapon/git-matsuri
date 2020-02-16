@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg&circle-token=d8dafe865a3b6e3dee7dd0f56e51e393f4ffc0be)](https://circleci.com/gh/MatsuriJapon/git-matsuri) [![GoDoc](https://godoc.org/github.com/MatsuriJapon/git-matsuri?status.svg)](https://godoc.org/github.com/MatsuriJapon/git-matsuri) [![Go Report Card](https://goreportcard.com/badge/github.com/MatsuriJapon/git-matsuri)](https://goreportcard.com/report/github.com/MatsuriJapon/git-matsuri)
+[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg&circle-token=d8dafe865a3b6e3dee7dd0f56e51e393f4ffc0be)](https://circleci.com/gh/MatsuriJapon/git-matsuri) [![GoDoc](https://godoc.org/github.com/MatsuriJapon/git-matsuri?status.svg)](https://godoc.org/github.com/MatsuriJapon/git-matsuri) [![Go Report Card](https://goreportcard.com/badge/github.com/MatsuriJapon/git-matsuri)](https://goreportcard.com/report/github.com/MatsuriJapon/git-matsuri) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/MatsuriJapon/git-matsuri?label=latest%20version)
 
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
