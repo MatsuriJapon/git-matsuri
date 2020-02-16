@@ -18,7 +18,14 @@ const TokenName = "MATSURI_TOKEN"
 
 const owner = "MatsuriJapon"
 
-var ctx = context.Background()
+var (
+	ctx                 = context.Background()
+	projectCardListOpts = &github.ProjectCardListOptions{
+		ListOptions: github.ListOptions{
+			PerPage: 100,
+		},
+	}
+)
 
 // GetLatestVersion gets the release tag of the latest release version of git-matsuri
 func GetLatestVersion() (v *version.Version, err error) {
@@ -181,7 +188,7 @@ func GetIssuesForProject(year int) (issues []*github.Issue, err error) {
 	if err != nil {
 		return
 	}
-	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
+	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
 	for i := 0; i < len(cards); i++ {
 		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
@@ -252,7 +259,7 @@ func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *gith
 		return nil
 	}
 	client := GetClient()
-	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
+	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
 	for i := 0; i < len(cards); i++ {
 		if card := cards[i]; IsCardIssueOrPR(card) {
 			num := GetIssueNumberFromCard(card)
@@ -429,7 +436,7 @@ func PrintProjectKanban(project *github.Project) {
 	for i := 0; i < len(columns); i++ {
 		column := columns[i]
 		fmt.Println(column.GetName())
-		cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), nil)
+		cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
 		for j := 0; j < len(cards); j++ {
 			card := cards[j]
 			num := GetIssueNumberFromCard(card)
