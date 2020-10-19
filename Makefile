@@ -22,6 +22,6 @@ test: clean
 	go test -race -v ./...
 
 build: clean setup
-	env GOOS=$(OS) GOARCH=$(ARCH) go build $(LDFLAGS) -o $(BUILD_DIR)/kubectl-nse-$(OS)-$(ARCH)$(EXT) .
+	env GOOS=$(OS) GOARCH=$(ARCH) go build $(LDFLAGS) -o $(BUILD_DIR)/git-matsuri-$(OS)-$(ARCH)$(EXT) .
 
 .PHONY: setup test lint build clean
