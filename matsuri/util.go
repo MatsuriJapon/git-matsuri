@@ -18,6 +18,8 @@ const TokenName = "MATSURI_TOKEN"
 
 const owner = "MatsuriJapon"
 
+const projectName = "Matsuri"
+
 var (
 	ctx                 = context.Background()
 	projectCardListOpts = &github.ProjectCardListOptions{
@@ -157,30 +159,15 @@ func GetDefaultBranch() (branch *string, err error) {
 	return
 }
 
-// GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name of the matsuri-japon repository
-func GetCurrentProjectYear() (currentYear int, err error) {
-	client := GetClient()
-	repo, _, err := client.Repositories.Get(ctx, owner, "matsuri-japon")
-	if err != nil {
-		return
-	}
-	r := regexp.MustCompile(`^v(?P<year>\d+)`)
-	matches := r.FindStringSubmatch(*repo.DefaultBranch)
-	if len(matches) == 2 {
-		currentYear, _ = strconv.Atoi(matches[1])
-	}
-	return
-}
-
-// GetIssuesForProject retrieves Issues for a Project, specified by its year
-func GetIssuesForProject(year int) (issues []*github.Issue, err error) {
+// GetIssuesForProject retrieves Issues for a Project
+func GetIssuesForProject() (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
 	client := GetClient()
 
-	project, err := GetProjectForYear(year)
+	project, err := GetProject()
 	if err != nil {
 		return
 	}
@@ -218,11 +205,10 @@ func GetRepoNameFromURL(url string) (repoName string) {
 	return
 }
 
-// GetProjectForYear gets the project associated with the current Matsuri year
-func GetProjectForYear(year int) (project *github.Project, err error) {
+// GetProject gets master project
+func GetProject() (project *github.Project, err error) {
 	client := GetClient()
 
-	projectName := fmt.Sprintf("Matsuri %d", year)
 	projects, _, err := client.Organizations.ListProjects(ctx, owner, nil)
 	if err != nil {
 		return
@@ -286,6 +272,14 @@ func GetRepoIssues() (issues []*github.Issue, err error) {
 	return
 }
 
+// GetIssues gets issues that need to be worked on
+func GetIssues(repoOnly bool) ([]*github.Issue, error) {
+	if repoOnly {
+		return GetRepoIssues()
+	}
+	return GetIssuesForProject()
+}
+
 func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -293,12 +287,11 @@ func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) 
 	}
 	client := GetClient()
 
-	projectYear, _ := GetCurrentProjectYear()
 	pr, _, err = client.PullRequests.Create(ctx, owner, repoName, newPr)
 	if err != nil {
 		return
 	}
-	project, err := GetProjectForYear(projectYear)
+	project, err := GetProject()
 	if err != nil {
 		return
 	}
@@ -374,9 +367,9 @@ func CreateFixPRForIssueNumber(issueNum int, noclose bool) (pr *github.PullReque
 	return createPR(newPr)
 }
 
-// MoveProjectCardForProject moves the Issue to the Doing column of the current Matsuri project year
-func MoveProjectCardForProject(num int, year int) (err error) {
-	project, err := GetProjectForYear(year)
+// MoveProjectCardForProject moves the Issue to the Doing project column
+func MoveProjectCardForProject(num int) (err error) {
+	project, err := GetProject()
 	if err != nil {
 		return
 	}

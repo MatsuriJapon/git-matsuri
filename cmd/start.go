@@ -59,11 +59,6 @@ func runStart(cmd *cobra.Command, args []string) (err error) {
 	if err != nil {
 		return
 	}
-	// weird logic to get "current" Matsuri project year
-	currentYear, err := matsuri.GetCurrentProjectYear()
-	if err != nil {
-		return
-	}
 
 	if !matsuri.IsValidIssue(issueNumber) {
 		err = errors.New("invalid Issue provided")
@@ -74,7 +69,7 @@ func runStart(cmd *cobra.Command, args []string) (err error) {
 		return
 	}
 	// Some Issues may not be assigned to a Project, so we'll ignore errors here
-	_ = matsuri.MoveProjectCardForProject(issueNumber, currentYear)
+	_ = matsuri.MoveProjectCardForProject(issueNumber)
 	// checkout branch
 	cmd.Println("Checking out topic branch...")
 	branchName := fmt.Sprintf("ISSUE-%d", issueNumber)
