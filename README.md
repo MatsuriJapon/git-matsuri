@@ -20,6 +20,14 @@ export PATH="$(pwd):$PATH"
 ```
 - To make this permanent, add the above to your `~/.bashrc` or `~/.bash_profile` file and reload it using `source ~/.bashrc` or `source ~/.bash_profile`
 
+## Shell completion
+Supports completions for bash, fish, powershell, zsh. Example:
+
+### Linux
+```sh
+git-matsuri completion bash >> /etc/bash_completion.d/git-matsuri
+```
+
 ### GitHub token
 Visit https://github.com/settings/tokens/new and create a new token with `repo` and `user:email` permissions and save it to your system environment variables under the name `MATSURI_TOKEN`
 

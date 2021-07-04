@@ -2,7 +2,7 @@ version: 2.1
 executors:
   golang:
     docker:
-      - image: quay.io/cybozu/golang:1.15-focal
+      - image: quay.io/cybozu/golang:1.16-focal
 jobs:
   lint:
     executor: golang
