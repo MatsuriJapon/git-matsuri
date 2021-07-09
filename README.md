@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/MatsuriJapon/git-matsuri.svg?style=svg&circle-token=d8dafe865a3b6e3dee7dd0f56e51e393f4ffc0be)](https://circleci.com/gh/MatsuriJapon/git-matsuri) [![GoDoc](https://godoc.org/github.com/MatsuriJapon/git-matsuri?status.svg)](https://godoc.org/github.com/MatsuriJapon/git-matsuri) [![Go Report Card](https://goreportcard.com/badge/github.com/MatsuriJapon/git-matsuri)](https://goreportcard.com/report/github.com/MatsuriJapon/git-matsuri) [![CodeFactor](https://www.codefactor.io/repository/github/matsurijapon/git-matsuri/badge)](https://www.codefactor.io/repository/github/matsurijapon/git-matsuri) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/MatsuriJapon/git-matsuri?label=latest%20version)
+[![GoDoc](https://godoc.org/github.com/MatsuriJapon/git-matsuri?status.svg)](https://godoc.org/github.com/MatsuriJapon/git-matsuri) [![Go Report Card](https://goreportcard.com/badge/github.com/MatsuriJapon/git-matsuri)](https://goreportcard.com/report/github.com/MatsuriJapon/git-matsuri) [![CodeFactor](https://www.codefactor.io/repository/github/matsurijapon/git-matsuri/badge)](https://www.codefactor.io/repository/github/matsurijapon/git-matsuri) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/MatsuriJapon/git-matsuri?label=latest%20version)
 
 # git-matsuri
 Git subcommands to use with repositories under the MatsuriJapon Organization.
@@ -7,7 +7,7 @@ Git subcommands to use with repositories under the MatsuriJapon Organization.
 [Git](https://git-scm.com/downloads) must be installed.
 
 ## Installation
-Download and extract the latest [release](https://github.com/MatsuriJapon/git-matsuri/releases) or compile from source (requires Go 1.12+). The binary is found in the respective directory for the platform of choice (`windows_amd64` for Windows, `darwin_amd64` for Mac OS, etc.).
+Download and extract the latest [release](https://github.com/MatsuriJapon/git-matsuri/releases) for your platform or compile from source.
 
 ### Windows
 - Place `git-matsuri.exe` into the `C:\Program Files\Git\mingw64\libexec\git-core` folder

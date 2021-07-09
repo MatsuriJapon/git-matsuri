@@ -7,28 +7,32 @@ import (
 )
 
 var (
-	CurrentVersion string
-	versionCmd     = &cobra.Command{
+	versionCmd = &cobra.Command{
 		Use:   "version",
 		Short: "show the version number",
 		Long:  "Show the version number for git-matsuri and checks if it currently is the latest version.string",
 		Args:  cobra.NoArgs,
 		RunE:  runVersion,
 	}
+
+	currentVersion string
+	commit         string
+	date           string
+	builtBy        string
 )
 
 func runVersion(cmd *cobra.Command, args []string) (err error) {
-	currentVersion, err := version.NewVersion(CurrentVersion)
+	cv, err := version.NewVersion(currentVersion)
 	if err != nil {
 		return
 	}
-	latestVersion, err := matsuri.GetLatestVersion()
+	lv, err := matsuri.GetLatestVersion()
 	if err != nil {
 		return
 	}
-	cmd.Printf("git-matsuri version %s\n", currentVersion)
-	if currentVersion.LessThan(latestVersion) {
-		cmd.Printf("A new version is available: %s\n", latestVersion)
+	cmd.Printf("git-matsuri version %s\ncommit: %s\ndate: %s\nbuiltBy: %s\n\n", cv, commit, date, builtBy)
+	if cv.LessThan(lv) {
+		cmd.Printf("A new version is available: %s\n", lv)
 	} else {
 		cmd.Println("You are using the latest version")
 	}
