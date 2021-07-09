@@ -4,21 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/go-github/v29/github"
-	"github.com/hashicorp/go-version"
-	"golang.org/x/oauth2"
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
+
+	"github.com/google/go-github/v29/github"
+	"github.com/hashicorp/go-version"
+	"golang.org/x/oauth2"
 )
 
-// TokenName is the environment variable name for the GitHub token
-const TokenName = "MATSURI_TOKEN"
-
-const owner = "MatsuriJapon"
-
-const projectName = "Matsuri"
+const (
+	// TokenName is the environment variable name for the GitHub token
+	TokenName = "MATSURI_TOKEN"
+	owner     = "MatsuriJapon"
+)
 
 var (
 	ctx                 = context.Background()
@@ -27,6 +28,8 @@ var (
 			PerPage: 100,
 		},
 	}
+
+	projectRegex = regexp.MustCompile(`^Matsuri.*$`)
 )
 
 // GetLatestVersion gets the release tag of the latest release version of git-matsuri
@@ -205,7 +208,7 @@ func GetRepoNameFromURL(url string) (repoName string) {
 	return
 }
 
-// GetProject gets master project
+// GetProject retrieves the oldest matching open project
 func GetProject() (project *github.Project, err error) {
 	client := GetClient()
 
@@ -213,13 +216,16 @@ func GetProject() (project *github.Project, err error) {
 	if err != nil {
 		return
 	}
+	sort.Slice(projects, func(i, j int) bool {
+		return projects[i].GetID() < projects[j].GetID()
+	})
 	for i := 0; i < len(projects); i++ {
-		if projects[i].GetName() == projectName {
+		if projectRegex.MatchString(projects[i].GetName()) {
 			project = projects[i]
 			return
 		}
 	}
-	err = fmt.Errorf("Error: Project %s was not found", projectName)
+	err = fmt.Errorf("Error: a suitable project was not found")
 	return
 }
 
