@@ -1,27 +1,31 @@
-BUILD_DIR=./artifacts
-WORK_DIR=./bin
-VERSION := $(shell cat VERSION)
-LDFLAGS=-ldflags "-X github.com/MatsuriJapon/git-matsuri/cmd.CurrentVersion=${VERSION}"
-OS ?= linux
-ARCH ?= amd64
-ifeq ($(OS), windows)
-EXT = .exe
-endif
+VERSION  := $(shell cat VERSION)
+LDFLAGS  := -ldflags "-w -s -X github.com/MatsuriJapon/git-matsuri/cmd.currentVersion=${VERSION}"
+BIN_DIR  := bin
+BIN_NAME := git-matsuri
 
+.PHONY: clean
 clean:
-	rm -rf ${BUILD_DIR} ${WORK_DIR}
+	rm -rf $(BIN_DIR)
 
+.PHONY: setup
 setup:
-	mkdir -p ${BUILD_DIR} ${WORK_DIR}
+	mkdir -p $(BIN_DIR)
 
-lint: clean setup
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ${WORK_DIR} v1.27.0
-	${WORK_DIR}/golangci-lint run
+.PHONY: lint
+lint:
+	if [ -z "$(shell which pre-commit)" ]; then pip3 install pre-commit; fi
+	pre-commit install
+	pre-commit run --all-files
 
+.PHONY: test
 test: clean
 	go test -race -v ./...
 
-build: clean setup
-	env GOOS=$(OS) GOARCH=$(ARCH) go build $(LDFLAGS) -o $(BUILD_DIR)/git-matsuri-$(OS)-$(ARCH)$(EXT) .
+.PHONY: verify
+verify:
+	go mod download
+	go mod verify
 
-.PHONY: setup test lint build clean
+.PHONY: build
+build: clean setup
+	env CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN_DIR)/$(BIN_NAME) .

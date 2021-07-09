@@ -1,9 +1,16 @@
 linters:
-    enable:
-        - dupl
-        - goconst
-        - gocyclo
-        - gofmt
-        - golint
-        - typecheck
-        - unparam
+  enable:
+    - dupl
+    - gocognit
+    - goconst
+    - gocyclo
+    - godot
+    - gofmt
+    - gosec
+    - revive
+    - typecheck
+    - unparam
+linters-settings:
+  gosec:
+    excludes:
+      - G204

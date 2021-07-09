@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	// CurrentVersion is a build-time string representing the current version
+	// CurrentVersion is a build-time string representing the current version.
 	rootCmd = &cobra.Command{
 		Use:               "git-matsuri",
 		Short:             "git-matsuri provides useful git subcommands for matsuri workflows",

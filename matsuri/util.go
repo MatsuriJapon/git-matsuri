@@ -4,19 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/go-github/v29/github"
-	"github.com/hashicorp/go-version"
-	"golang.org/x/oauth2"
 	"os"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strconv"
+
+	"github.com/google/go-github/v29/github"
+	"github.com/hashicorp/go-version"
+	"golang.org/x/oauth2"
 )
 
-// TokenName is the environment variable name for the GitHub token
-const TokenName = "MATSURI_TOKEN"
-
-const owner = "MatsuriJapon"
+const (
+	// TokenName is the environment variable name for the GitHub token.
+	TokenName = "MATSURI_TOKEN" // #nosec
+	owner     = "MatsuriJapon"
+)
 
 var (
 	ctx                 = context.Background()
@@ -25,9 +28,11 @@ var (
 			PerPage: 100,
 		},
 	}
+
+	projectRegex = regexp.MustCompile(`^Matsuri.*$`)
 )
 
-// GetLatestVersion gets the release tag of the latest release version of git-matsuri
+// GetLatestVersion gets the release tag of the latest release version of git-matsuri.
 func GetLatestVersion() (v *version.Version, err error) {
 	client := GetClient()
 
@@ -45,7 +50,7 @@ func GetLatestVersion() (v *version.Version, err error) {
 	return
 }
 
-// GetMatsuriEmail gets the festivaljapon.com email of the current user, if available
+// GetMatsuriEmail gets the festivaljapon.com email of the current user, if available.
 func GetMatsuriEmail() (email string, err error) {
 	client := GetClient()
 	userEmails, _, err := client.Users.ListEmails(ctx, nil)
@@ -64,7 +69,7 @@ func GetMatsuriEmail() (email string, err error) {
 	return
 }
 
-// GetRepoName gets the repository name from the current directory
+// GetRepoName gets the repository name from the current directory.
 func GetRepoName() (repo string, err error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	url, err := cmd.Output()
@@ -77,7 +82,7 @@ func GetRepoName() (repo string, err error) {
 	return
 }
 
-// GetRepoURL verifies that the given repository name matches a MatsuriJapon repository and returns its url
+// GetRepoURL verifies that the given repository name matches a MatsuriJapon repository and returns its url.
 func GetRepoURL(name string, http bool) (url string, err error) {
 	client := GetClient()
 
@@ -93,7 +98,7 @@ func GetRepoURL(name string, http bool) (url string, err error) {
 	return
 }
 
-// GetClient retrieves a client from a context with value
+// GetClient retrieves a client from a context with value.
 func GetClient() (client *github.Client) {
 	ctx := context.Background()
 	token := os.Getenv(TokenName)
@@ -103,7 +108,7 @@ func GetClient() (client *github.Client) {
 	return
 }
 
-// IsCardIssueOrPR checks whether the ProjectCard is an Issue Card
+// IsCardIssueOrPR checks whether the ProjectCard is an Issue Card.
 func IsCardIssueOrPR(c *github.ProjectCard) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -114,7 +119,7 @@ func IsCardIssueOrPR(c *github.ProjectCard) bool {
 	return re.MatchString(c.GetContentURL())
 }
 
-// IsValidIssue verifies that an open Issue with the given number exists
+// IsValidIssue verifies that an open Issue with the given number exists.
 func IsValidIssue(num int) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -128,7 +133,7 @@ func IsValidIssue(num int) bool {
 	return issue.GetState() == "open" && !issue.IsPullRequest()
 }
 
-// IsExistingIssue verifies that the Issue exists and is not a pull request
+// IsExistingIssue verifies that the Issue exists and is not a pull request.
 func IsExistingIssue(num int) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -142,7 +147,7 @@ func IsExistingIssue(num int) bool {
 	return !issue.IsPullRequest()
 }
 
-// GetDefaultBranch gets the name of the default branch for the repo
+// GetDefaultBranch gets the name of the default branch for the repo.
 func GetDefaultBranch() (branch *string, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -157,30 +162,15 @@ func GetDefaultBranch() (branch *string, err error) {
 	return
 }
 
-// GetCurrentProjectYear gets the "current" Matsuri project year by using the default branch name of the matsuri-japon repository
-func GetCurrentProjectYear() (currentYear int, err error) {
-	client := GetClient()
-	repo, _, err := client.Repositories.Get(ctx, owner, "matsuri-japon")
-	if err != nil {
-		return
-	}
-	r := regexp.MustCompile(`^v(?P<year>\d+)`)
-	matches := r.FindStringSubmatch(*repo.DefaultBranch)
-	if len(matches) == 2 {
-		currentYear, _ = strconv.Atoi(matches[1])
-	}
-	return
-}
-
-// GetIssuesForProject retrieves Issues for a Project, specified by its year
-func GetIssuesForProject(year int) (issues []*github.Issue, err error) {
+// GetIssuesForProject retrieves Issues for a Project.
+func GetIssuesForProject() (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return
 	}
 	client := GetClient()
 
-	project, err := GetProjectForYear(year)
+	project, err := GetProject()
 	if err != nil {
 		return
 	}
@@ -202,7 +192,7 @@ func GetIssuesForProject(year int) (issues []*github.Issue, err error) {
 	return
 }
 
-// GetIssueNumberFromCard gets the Issue number from a Card
+// GetIssueNumberFromCard gets the Issue number from a Card.
 func GetIssueNumberFromCard(c *github.ProjectCard) (id int) {
 	r := regexp.MustCompile(`(?:issues/)(?P<id>\d+)`)
 	matches := r.FindStringSubmatch(c.GetContentURL())
@@ -210,7 +200,7 @@ func GetIssueNumberFromCard(c *github.ProjectCard) (id int) {
 	return
 }
 
-// GetRepoNameFromURL gets the Repository name from a URL
+// GetRepoNameFromURL gets the Repository name from a URL.
 func GetRepoNameFromURL(url string) (repoName string) {
 	r := regexp.MustCompile(`(?:MatsuriJapon/)(?P<repoName>[^/]+)`)
 	matches := r.FindStringSubmatch(url)
@@ -218,26 +208,28 @@ func GetRepoNameFromURL(url string) (repoName string) {
 	return
 }
 
-// GetProjectForYear gets the project associated with the current Matsuri year
-func GetProjectForYear(year int) (project *github.Project, err error) {
+// GetProject retrieves the oldest matching open project.
+func GetProject() (project *github.Project, err error) {
 	client := GetClient()
 
-	projectName := fmt.Sprintf("Matsuri %d", year)
 	projects, _, err := client.Organizations.ListProjects(ctx, owner, nil)
 	if err != nil {
 		return
 	}
+	sort.Slice(projects, func(i, j int) bool {
+		return projects[i].GetID() < projects[j].GetID()
+	})
 	for i := 0; i < len(projects); i++ {
-		if projects[i].GetName() == projectName {
+		if projectRegex.MatchString(projects[i].GetName()) {
 			project = projects[i]
 			return
 		}
 	}
-	err = fmt.Errorf("Error: Project %s was not found", projectName)
+	err = fmt.Errorf("Error: a suitable project was not found")
 	return
 }
 
-// GetProjectColumnByName gets the column by its name
+// GetProjectColumnByName gets the column by its name.
 func GetProjectColumnByName(project *github.Project, columnName string) (column *github.ProjectColumn, err error) {
 	client := GetClient()
 
@@ -252,7 +244,7 @@ func GetProjectColumnByName(project *github.Project, columnName string) (column 
 	return
 }
 
-// GetProjectCardInColumn gets the project card associated with the given issue number
+// GetProjectCardInColumn gets the project card associated with the given issue number.
 func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *github.ProjectCard {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -275,7 +267,7 @@ func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *gith
 	return nil
 }
 
-// GetRepoIssues gets the issues for the current repository
+// GetRepoIssues gets the issues for the current repository.
 func GetRepoIssues() (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -286,6 +278,14 @@ func GetRepoIssues() (issues []*github.Issue, err error) {
 	return
 }
 
+// GetIssues gets issues that need to be worked on.
+func GetIssues(repoOnly bool) ([]*github.Issue, error) {
+	if repoOnly {
+		return GetRepoIssues()
+	}
+	return GetIssuesForProject()
+}
+
 func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -293,12 +293,11 @@ func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) 
 	}
 	client := GetClient()
 
-	projectYear, _ := GetCurrentProjectYear()
 	pr, _, err = client.PullRequests.Create(ctx, owner, repoName, newPr)
 	if err != nil {
 		return
 	}
-	project, err := GetProjectForYear(projectYear)
+	project, err := GetProject()
 	if err != nil {
 		return
 	}
@@ -314,7 +313,7 @@ func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) 
 	return
 }
 
-// CreatePRForIssueNumber creates a new PR for the given issue and returns the created card
+// CreatePRForIssueNumber creates a new PR for the given issue and returns the created card.
 func CreatePRForIssueNumber(issueNum int, noclose bool) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -344,7 +343,7 @@ func CreatePRForIssueNumber(issueNum int, noclose bool) (pr *github.PullRequest,
 	return createPR(newPr)
 }
 
-// CreateFixPRForIssueNumber creates a fix PR for the provided issue
+// CreateFixPRForIssueNumber creates a fix PR for the provided issue.
 func CreateFixPRForIssueNumber(issueNum int, noclose bool) (pr *github.PullRequest, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -374,9 +373,9 @@ func CreateFixPRForIssueNumber(issueNum int, noclose bool) (pr *github.PullReque
 	return createPR(newPr)
 }
 
-// MoveProjectCardForProject moves the Issue to the Doing column of the current Matsuri project year
-func MoveProjectCardForProject(num int, year int) (err error) {
-	project, err := GetProjectForYear(year)
+// MoveProjectCardForProject moves the Issue to the Doing project column.
+func MoveProjectCardForProject(num int) (err error) {
+	project, err := GetProject()
 	if err != nil {
 		return
 	}
@@ -406,7 +405,7 @@ func MoveProjectCardForProject(num int, year int) (err error) {
 	return
 }
 
-// ReopenIssue reopens a closed Issue
+// ReopenIssue reopens a closed Issue.
 func ReopenIssue(issueNum int) (err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -429,7 +428,7 @@ func ReopenIssue(issueNum int) (err error) {
 	return
 }
 
-// PrintProjectKanban prints the project kanban
+// PrintProjectKanban prints the project kanban.
 func PrintProjectKanban(project *github.Project) {
 	client := GetClient()
 	columns, _, _ := client.Projects.ListProjectColumns(ctx, project.GetID(), nil)
@@ -448,7 +447,7 @@ func PrintProjectKanban(project *github.Project) {
 	}
 }
 
-// PrintIssues prints issues
+// PrintIssues prints issues.
 func PrintIssues(issues []*github.Issue) {
 	for i := 0; i < len(issues); i++ {
 		issue := issues[i]
