@@ -10,7 +10,7 @@ builds:
       - -X github.com/MatsuriJapon/git-matsuri/cmd.currentVersion={{.Version}}
       - -X github.com/MatsuriJapon/git-matsuri/cmd.commit={{.Commit}}
       - -X github.com/MatsuriJapon/git-matsuri/cmd.date={{.Date}}
-      - -X github.com/MatsuriJapon/git-matsuri/cmd.buildBy=goreleaser
+      - -X github.com/MatsuriJapon/git-matsuri/cmd.builtBy=goreleaser
     goos:
       - linux
       - windows
