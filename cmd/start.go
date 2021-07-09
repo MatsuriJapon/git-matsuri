@@ -13,10 +13,11 @@ import (
 
 var (
 	startCmd = &cobra.Command{
-		Use:   "start",
-		Short: "start working on an open issue",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runStart,
+		Use:               "start ISSUE_NUMBER",
+		Short:             "start working on an open issue",
+		Args:              cobra.ExactArgs(1),
+		RunE:              runStart,
+		ValidArgsFunction: completeOpenIssuesForProject,
 	}
 )
 

@@ -11,11 +11,12 @@ import (
 var (
 	noCloseAfterPR bool
 	prCmd          = &cobra.Command{
-		Use:   "pr",
-		Short: "open a pull request for ISSUE",
-		Long:  "Open a pull request for ISSUE, adding a mention to $ISSUE in the message to link the PR to the issue. Add '-noclose' to override the closing of the issue",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runPR,
+		Use:               "pr",
+		Short:             "open a pull request for ISSUE",
+		Long:              "Open a pull request for ISSUE, adding a mention to $ISSUE in the message to link the PR to the issue. Add '-noclose' to override the closing of the issue",
+		Args:              cobra.ExactArgs(1),
+		RunE:              runPR,
+		ValidArgsFunction: completeInProgressIssuesForProject,
 	}
 )
 

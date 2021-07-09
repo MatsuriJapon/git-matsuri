@@ -11,10 +11,11 @@ import (
 
 var (
 	saveCmd = &cobra.Command{
-		Use:   "save",
-		Short: "save current work on GitHub",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runSave,
+		Use:               "save",
+		Short:             "save current work on GitHub",
+		Args:              cobra.ExactArgs(1),
+		RunE:              runSave,
+		ValidArgsFunction: completeInProgressIssuesForProject,
 	}
 )
 
