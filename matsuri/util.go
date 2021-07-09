@@ -17,7 +17,7 @@ import (
 
 const (
 	// TokenName is the environment variable name for the GitHub token
-	TokenName = "MATSURI_TOKEN"
+	TokenName = "MATSURI_TOKEN" // #nosec
 	owner     = "MatsuriJapon"
 )
 
