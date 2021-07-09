@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/google/go-github/v29/github"
 	"github.com/hashicorp/go-version"
@@ -31,6 +32,8 @@ var (
 
 	projectRegex = regexp.MustCompile(`^Matsuri.*$`)
 )
+
+type IssueGetterFunc func() (issues []*github.Issue, err error)
 
 // GetLatestVersion gets the release tag of the latest release version of git-matsuri.
 func GetLatestVersion() (v *version.Version, err error) {
@@ -108,8 +111,7 @@ func GetClient() (client *github.Client) {
 	return
 }
 
-// IsCardIssueOrPR checks whether the ProjectCard is an Issue Card.
-func IsCardIssueOrPR(c *github.ProjectCard) bool {
+func isCardIssue(c *github.ProjectCard) bool {
 	repoName, err := GetRepoName()
 	if err != nil {
 		return false
@@ -162,25 +164,30 @@ func GetDefaultBranch() (branch *string, err error) {
 	return
 }
 
-// GetIssuesForProject retrieves Issues for a Project.
-func GetIssuesForProject() (issues []*github.Issue, err error) {
-	repoName, err := GetRepoName()
-	if err != nil {
-		return
-	}
+func getProjectCards(columnName string) (cards []*github.ProjectCard, err error) {
 	client := GetClient()
 
 	project, err := GetProject()
 	if err != nil {
 		return
 	}
-	column, err := GetProjectColumnByName(project, "To do")
+	column, err := GetProjectColumnByName(project, columnName)
 	if err != nil {
 		return
 	}
-	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
+	cards, _, err = client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
+	return
+}
+
+func filterOutPRFromIssues(cards []*github.ProjectCard) (issues []*github.Issue, err error) {
+	repoName, err := GetRepoName()
+	if err != nil {
+		return
+	}
+	client := GetClient()
+
 	for i := 0; i < len(cards); i++ {
-		if card := cards[i]; IsCardIssueOrPR(card) {
+		if card := cards[i]; isCardIssue(card) {
 			num := GetIssueNumberFromCard(card)
 			issue, _, _ := client.Issues.Get(ctx, owner, repoName, num)
 			if issue.IsPullRequest() {
@@ -190,6 +197,37 @@ func GetIssuesForProject() (issues []*github.Issue, err error) {
 		}
 	}
 	return
+}
+
+// GetIssueNumbersStartingWith retrieves issue numbers starting with the given prefix.
+func GetIssueNumbersStartingWith(issues []*github.Issue, toComplete string) (issueNumbers []string) {
+	for _, issue := range issues {
+		issueNumber := strconv.Itoa(issue.GetNumber())
+		if strings.HasPrefix(issueNumber, toComplete) {
+			issueNumbers = append(issueNumbers, issueNumber)
+		}
+	}
+	return
+}
+
+// GetOpenIssuesForProject retrieves Issues for a Project.
+func GetOpenIssuesForProject() (issues []*github.Issue, err error) {
+	cards, err := getProjectCards("To do")
+	if err != nil {
+		return
+	}
+
+	return filterOutPRFromIssues(cards)
+}
+
+// GetOpenIssuesForProject retrieves in-progress Issues for a Project.
+func GetInProgressIssues() (issues []*github.Issue, err error) {
+	cards, err := getProjectCards("In progress")
+	if err != nil {
+		return
+	}
+
+	return filterOutPRFromIssues(cards)
 }
 
 // GetIssueNumberFromCard gets the Issue number from a Card.
@@ -253,7 +291,7 @@ func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *gith
 	client := GetClient()
 	cards, _, _ := client.Projects.ListProjectCards(ctx, column.GetID(), projectCardListOpts)
 	for i := 0; i < len(cards); i++ {
-		if card := cards[i]; IsCardIssueOrPR(card) {
+		if card := cards[i]; isCardIssue(card) {
 			num := GetIssueNumberFromCard(card)
 			_, _, err := client.Issues.Get(ctx, owner, repoName, num)
 			if err != nil {
@@ -267,7 +305,7 @@ func GetProjectCardInColumn(column *github.ProjectColumn, issueNumber int) *gith
 	return nil
 }
 
-// GetRepoIssues gets the issues for the current repository.
+// GetRepoIssues gets the issues for the current repository, regardless if they belong to a project or not.
 func GetRepoIssues() (issues []*github.Issue, err error) {
 	repoName, err := GetRepoName()
 	if err != nil {
@@ -279,11 +317,11 @@ func GetRepoIssues() (issues []*github.Issue, err error) {
 }
 
 // GetIssues gets issues that need to be worked on.
-func GetIssues(repoOnly bool) ([]*github.Issue, error) {
+func GetOpenIssues(repoOnly bool) ([]*github.Issue, error) {
 	if repoOnly {
 		return GetRepoIssues()
 	}
-	return GetIssuesForProject()
+	return GetOpenIssuesForProject()
 }
 
 func createPR(newPr *github.NewPullRequest) (pr *github.PullRequest, err error) {

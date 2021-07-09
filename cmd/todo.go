@@ -15,7 +15,7 @@ var (
 )
 
 func runTodo(cmd *cobra.Command, args []string) error {
-	issues, err := matsuri.GetIssues(showOnlyCurrentRepo)
+	issues, err := matsuri.GetOpenIssues(showOnlyCurrentRepo)
 	if err != nil {
 		return err
 	}
