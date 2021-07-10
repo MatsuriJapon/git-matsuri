@@ -204,7 +204,7 @@ func GetIssueNumbersStartingWith(issues []*github.Issue, toComplete string) (iss
 	for _, issue := range issues {
 		issueNumber := strconv.Itoa(issue.GetNumber())
 		if strings.HasPrefix(issueNumber, toComplete) {
-			issueNumbers = append(issueNumbers, issueNumber)
+			issueNumbers = append(issueNumbers, fmt.Sprintf("%s\t%s", issueNumber, issue.GetTitle()))
 		}
 	}
 	return
